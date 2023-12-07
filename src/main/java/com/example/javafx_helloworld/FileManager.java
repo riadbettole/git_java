@@ -1,47 +1,34 @@
 package com.example.javafx_helloworld;
 
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-
 import java.io.*;
 import java.util.*;
 
-enum FileState {
-    ADDED, MODIFIED, PREVIOUS, DELETED;
-}
-
-public class HelloApplication extends Application {
-
-    public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 600, 400);
-
-        stage.setTitle("File Manager!");
-        stage.setScene(scene);
-
-        stage.show();
+public class FileManager {
 
 
+    static private String InitialDirectory;
+    private static final String PathOfProjectState = "/.gitryad/meow";
 
-    }
+    private static final Map<String, Long> currentStateFiles = new HashMap<>();
+    private static final Map<FileState, ArrayList<String>> currentChangesFiles = new HashMap<>();
 
-    public static void main(String[] args) {
-        launch();
-    }
-}
-
-
-class File_manager {
-    static String InitialDirectory;
-    static File current_directory;
-    static Map<String, Long> currentStateFiles = new HashMap<>();
-    static Map<FileState, ArrayList<String>> currentChangesFiles = new HashMap<>();
     private static final Set<String> foldersToIgnore = new HashSet<>();
+
+    public static Map<String, Long> get_current_state_files() {
+        return currentStateFiles;
+    }
+
+    public static Map<FileState, ArrayList<String>> get_current_changes_files() {
+        return currentChangesFiles;
+    }
+
+    public static void set_initial_directory(String initialDirectory) {
+        InitialDirectory = initialDirectory;
+    }
+
     public static void find_all_files(String current){
 
-        current_directory = new File(current);
+        File current_directory = new File(current);
 
         if(!current_directory.exists() || !current_directory.isDirectory()){
             return;
@@ -64,8 +51,7 @@ class File_manager {
         }
     }
 
-
-    public static void empty() {
+    public static void empty_current_file_state_array() {
         currentStateFiles.clear();
     }
 
@@ -86,16 +72,16 @@ class File_manager {
         }
     }
 
-    public static void save_state(){
-        System.out.println(InitialDirectory+"/.gitryad/meow");
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(InitialDirectory+"/.gitryad/meow"))) {
+    public static void save_current_file_state(){
+        System.out.println(InitialDirectory + PathOfProjectState);
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(InitialDirectory + PathOfProjectState))) {
             oos.writeObject(currentStateFiles);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static Map<String, Long> retrievePreviousState(String stateFilePath){
+    public static Map<String, Long> retrieve_previous_state(String stateFilePath){
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(stateFilePath))) {
             return (Map<String, Long>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
@@ -104,9 +90,9 @@ class File_manager {
         }
     }
 
-    public static void detectChanges(){
-        String prevFilePath = InitialDirectory + "/.gitryad/meow";
-        Map<String, Long> previousState = retrievePreviousState(prevFilePath);
+    public static void detect_file_changes(){
+        String prevFilePath = InitialDirectory + PathOfProjectState;
+        Map<String, Long> previousState = retrieve_previous_state(prevFilePath);
 
         currentChangesFiles.clear();
 
@@ -132,7 +118,7 @@ class File_manager {
     }
 
     public static boolean saved_state_exist() {
-        String filePath = InitialDirectory + "/.gitryad/meow";
+        String filePath = InitialDirectory + PathOfProjectState;
 
         File file = new File(filePath);
 
