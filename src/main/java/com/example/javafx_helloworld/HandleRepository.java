@@ -18,7 +18,7 @@ public class HandleRepository {
         HandleRepository.directoryPath = directoryPath;
     }
 
-    public static void create_repository_Folder() {
+    public static void create_repository_folder() {
         Path path = Paths.get(directoryPath + PathOfRepository);
         try {
             Files.createDirectories(path);

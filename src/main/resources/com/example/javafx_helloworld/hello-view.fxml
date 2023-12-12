@@ -18,7 +18,12 @@
             <Button onAction="#recheck_files" text="Check Changes" />
     </HBox>
 
-    <TextArea fx:id="filesTextArea" editable="false" />
-    <TextFlow fx:id="changesTextFlow" prefHeight="200.0" prefWidth="200.0" />
+    <VBox alignment="CENTER">
+        <TextArea fx:id="filesTextArea" editable="false" />
+        <TextFlow fx:id="changesTextFlow" prefHeight="200.0" prefWidth="200.0" />
+        <Button fx:id="compareFilesButton" text="Compare two files" visible="false" />
+    </VBox>
+
+
 
 </VBox>
