@@ -11,16 +11,8 @@ public class LineChanges implements Comparable<LineChanges> {
         this.index = index;
     }
 
-    public String getLine() {
-        return line;
-    }
-
     public LineState getColor() {
         return color;
-    }
-
-    public int getIndex() {
-        return index;
     }
 
     @Override
