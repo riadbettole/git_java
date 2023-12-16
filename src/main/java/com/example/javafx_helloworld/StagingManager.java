@@ -74,10 +74,10 @@ public class StagingManager {
         return !file.exists();
     }
 
-    public static void update_staging_file(String file_path,String hashed_name){
+    public static void update_staging_file(String filePath,String hashedName){
         // get and update old staging to make a new one
         HashMap<String, String> oldStaging = retrieve_staging();
-        oldStaging.put(file_path,hashed_name);
+        oldStaging.put(filePath,hashedName);
 
         //create and save state file
         try (ObjectOutputStream outStagingFile = new ObjectOutputStream(new FileOutputStream(PathOfZippedFolders + "/staging"))) {
@@ -93,17 +93,17 @@ public class StagingManager {
             return (HashMap<String, String>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             // Return an empty map if the file doesn't exist (first run)
-            return new HashMap<String, String>();
+            return new HashMap<>();
         }
     }
 
-    public static void add_file_to_staging(ArrayList<String> filePaths){
-//        String file_path = f.getPath();
-        filePaths.forEach(file_path ->{
-            String hashed_name = convert_file_to_sha1(file_path);
+//    public static void add_file_to_staging(ArrayList<String> filePaths){
+    public static void add_file_to_staging(String filePath){
+//        String filePath = f.getPath();
+            String hashedName = convert_file_to_sha1(filePath);
 
-            String firstTwoCharacters = hashed_name.substring(0, 2);
-            String hashedNameForFile = hashed_name.substring(2);
+            String firstTwoCharacters = hashedName.substring(0, 2);
+            String hashedNameForFile = hashedName.substring(2);
             String wholePathForFolder = PathOfZippedFolders + "/" + firstTwoCharacters;
             String wholePathForFile = wholePathForFolder + "/" + hashedNameForFile;
 
@@ -111,10 +111,21 @@ public class StagingManager {
                 create_zipped_file_folder(wholePathForFolder);
             }
 
-            compress_file_content_into_folder(file_path,wholePathForFile);
-            update_staging_file(file_path, hashed_name);
-        });
+            compress_file_content_into_folder(filePath,wholePathForFile);
+            update_staging_file(filePath, hashedName);
+            
+    }
+    
+    public static void delete_file_from_staging(String filePath){
+        // get and update old staging to make a new one
+        HashMap<String, String> oldStaging = retrieve_staging();
+        oldStaging.remove(filePath);
 
-
+        //create and save state file
+        try (ObjectOutputStream outStagingFile = new ObjectOutputStream(new FileOutputStream(PathOfZippedFolders + "/staging"))) {
+            outStagingFile.writeObject(oldStaging);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

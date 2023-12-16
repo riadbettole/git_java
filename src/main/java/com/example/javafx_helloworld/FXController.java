@@ -15,8 +15,8 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
+import java.util.List;
 
 public class FXController {
 
@@ -33,8 +33,9 @@ public class FXController {
 
     @FXML
     private VBox dynamicCheckBoxContainer;
-    CheckBox[] checkboxes;
-    List<String> allCheckedFilesForStaging = new ArrayList<>();
+//    CheckBox[] checkboxes;
+    CustomCheckBox[] customCheckBoxes;
+//    List<String> allCheckedFilesForStaging = new ArrayList<>();
 
     private void handle_compare_button(){
         compareFilesButton.setVisible(true);
@@ -106,24 +107,23 @@ public class FXController {
     public void show_file_changes(){
         Map<FileStateEnums, ArrayList<String>> changes = StateManager.get_current_changes_files();
         dynamicCheckBoxContainer.getChildren().clear();
-        int numberOfStrings = changes.values().stream().mapToInt(List::size).sum();
-        checkboxes = new CheckBox[numberOfStrings];
 
-        int currentIndex = 0;
+        int numberOfStrings = changes.values().stream().mapToInt(List::size).sum();
+
+        customCheckBoxes = new CustomCheckBox[numberOfStrings];
+        int index = 0;
 
         for (Map.Entry<FileStateEnums, ArrayList<String>> entry : changes.entrySet()) {
             FileStateEnums state = entry.getKey();
             ArrayList<String> arrayOfPaths = entry.getValue();
 
-            for (String arrayOfPath : arrayOfPaths) {
-                checkboxes[currentIndex] = new CheckBox(arrayOfPath);
-                if(state == FileStateEnums.ADDED)
-                    checkboxes[currentIndex].setStyle("-fx-text-fill: green;");
-                else if(state == FileStateEnums.UNADDED)
-                    checkboxes[currentIndex].setStyle("-fx-text-fill: red;");
 
-                dynamicCheckBoxContainer.getChildren().add(checkboxes[currentIndex]);
-                currentIndex++;
+            for (String filePath : arrayOfPaths) {
+
+                customCheckBoxes[index] = new CustomCheckBox(filePath, state);
+
+                dynamicCheckBoxContainer.getChildren().add(customCheckBoxes[index]);
+                index++;
             }
         }
 
@@ -136,14 +136,20 @@ public class FXController {
 
     public void handle_stanging(){
 
-        for (CheckBox checkBox : checkboxes) {
-            if (checkBox.isSelected()) {
-                // Perform your operation on the selected path
-                allCheckedFilesForStaging.add(checkBox.getText());
-                System.out.println(checkBox.getText());
+
+        for (CustomCheckBox customCheckBox : customCheckBoxes) {
+            if (customCheckBox.isSelected()) {
+//                allCheckedFilesForStaging.add(customCheckBox.getFilePath());
+                if(customCheckBox.getFileState() == FileStateEnums.UNADDED){
+                    StagingManager.add_file_to_staging(customCheckBox.getFilePath());
+                }
+                else{
+                    StagingManager.delete_file_from_staging(customCheckBox.getFilePath());
+                }
+                System.out.println(customCheckBox.getFilePath());
             }
         }
-        StagingManager.add_file_to_staging((ArrayList<String>) allCheckedFilesForStaging);
+//        StagingManager.add_file_to_staging((ArrayList<String>) allCheckedFilesForStaging);
         recheck_files();
     }
 
@@ -196,4 +202,31 @@ public class FXController {
 
     }
 
+}
+
+class CustomCheckBox extends CheckBox {
+    private final String filePath;
+    private final FileStateEnums fileState;
+
+    public CustomCheckBox(String filePath, FileStateEnums fileState) {
+        super(filePath);
+        this.filePath = filePath;
+        this.fileState = fileState;
+        updateStyle();
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public FileStateEnums getFileState() {
+        return fileState;
+    }
+
+    public void updateStyle() {
+        if (fileState == FileStateEnums.ADDED)
+            setStyle("-fx-text-fill: green;");
+        else if (fileState == FileStateEnums.UNADDED)
+            setStyle("-fx-text-fill: red;");
+    }
 }

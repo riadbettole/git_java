@@ -16,9 +16,9 @@ public class StateManager {
     private static final Set<String> filesToIgnore = new HashSet<>();
     private static Map<String, String> stagedFiles = new HashMap<>();
 
-    public static Map<String, Long> get_current_state_files() {
-        return currentStateFiles;
-    }
+//    public static Map<String, Long> get_current_state_files() {
+//        return currentStateFiles;
+//    }
 
     public static Map<FileStateEnums, ArrayList<String>> get_current_changes_files() {
         return currentChangesFiles;

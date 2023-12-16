@@ -2,7 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.TextFlow?>
@@ -20,7 +19,7 @@
 
     <VBox alignment="CENTER">
 <!--        <TextArea fx:id="filesTextArea" editable="false" />-->
-        <TextFlow fx:id="stagedTextFlow" prefHeight="200.0" prefWidth="200.0" />
+<!--        <TextFlow fx:id="stagedTextFlow" prefHeight="200.0" prefWidth="200.0" />-->
         <TextFlow fx:id="unstagedTextFlow" prefHeight="200.0" prefWidth="200.0" />
 
         <VBox fx:id="dynamicCheckBoxContainer"  spacing="10.0" />
