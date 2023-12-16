@@ -2,8 +2,9 @@ package com.example.javafx_helloworld;
 
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.CheckBox;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -14,14 +15,15 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-
+import java.util.List;
+import java.util.Map;
 
 public class FXController {
 
+//    @FXML
+//    private TextArea filesTextArea;
     @FXML
-    private TextArea filesTextArea;
-    @FXML
-    private TextFlow changesTextFlow;
+    private TextFlow unstagedTextFlow;
     @FXML
     private Button compareFilesButton;
 
@@ -30,9 +32,11 @@ public class FXController {
     private String directoryPath;
 
     @FXML
-    protected void handle_show_files_button() {
-        handle_folder_selection();
+    private VBox dynamicCheckBoxContainer;
+    CheckBox[] checkboxes;
+    List<String> allCheckedFilesForStaging = new ArrayList<>();
 
+    private void handle_compare_button(){
         compareFilesButton.setVisible(true);
         compareFilesButton.setOnAction(event -> {
             compare_files();
@@ -45,36 +49,44 @@ public class FXController {
             resultStage.setScene(resultScene);
             resultStage.show();
         });
+    }
+
+    @FXML
+    protected void handle_show_files_button() {
+        handle_folder_selection();
+
+        handle_compare_button();
 
         if(directoryPath == null || directoryPath.isEmpty()){
             return;
         }
 
-        FileManager.set_initial_directory(directoryPath);
-        FileManager.read_ignore_file();
+        StateManager.set_initial_directory(directoryPath);
+        StateManager.read_ignore_file();
+        StagingManager.set_initial_path_Of_zipped_folders(directoryPath);
 
         update_everything();
     }
 
     public void update_everything(){
-        filesTextArea.clear();
+        //filesTextArea.clear();
 
-        FileManager.find_all_files(directoryPath);
+        StateManager.find_all_files(directoryPath);
 
-        FileManager.get_current_state_files()
-                .forEach((filePath, v) -> filesTextArea.appendText(filePath + "\n"));
+//        Map<String, Long> currentStateOfFile = StateManager.get_current_state_files();
+//        currentStateOfFile.forEach((filePath, v) -> filesTextArea.appendText(filePath + "\n"));
 
-        if(FileManager.saved_state_exist()) {
-            FileManager.detect_file_changes();
-            changesTextFlow.getChildren().clear();
+        if(StateManager.saved_state_file_exist()) {
+            StateManager.detect_file_changes();
+            unstagedTextFlow.getChildren().clear();
             show_file_changes();
         }
-        FileManager.save_current_file_state();
+        StateManager.save_current_file_state();
     }
 
     @FXML
     public void recheck_files(){
-        FileManager.empty_current_file_state_array();
+        StateManager.empty_state_staging_maps();
         update_everything();
     }
 
@@ -83,53 +95,78 @@ public class FXController {
         File f = new File(directoryPath+"/720_576.ps1");
         File f2 = new File(directoryPath+"/720_576_1.ps1");
 
-        FileComparator.set_old_file_path(f.getPath());
-        FileComparator.set_new_file_path(f2.getPath());
+        ComparatorManager.set_old_file_path(f.getPath());
+        ComparatorManager.set_new_file_path(f2.getPath());
 
-        FileComparator.to_map_files();
+        ComparatorManager.to_map_files();
 
-        FileComparator.compare();
+        ComparatorManager.compare();
     }
 
     public void show_file_changes(){
+        Map<FileStateEnums, ArrayList<String>> changes = StateManager.get_current_changes_files();
+        dynamicCheckBoxContainer.getChildren().clear();
+        int numberOfStrings = changes.values().stream().mapToInt(List::size).sum();
+        checkboxes = new CheckBox[numberOfStrings];
 
-        FileManager.get_current_changes_files()
-                .forEach((state, arrayOfPaths) -> {
-                    Color color ;
-                    switch (state) {
-                        case ADDED -> color = Color.GREEN;
-                        case MODIFIED -> color = Color.ORANGE;
-                        case DELETED -> color = Color.RED;
-                        default -> color = Color.BLACK;
-                    }
-                    arrayOfPaths.forEach( file -> {
-                        Text text = new Text(file + "\n");
-                        text.setFill(color);
-                        changesTextFlow.getChildren().add(text);
-                    });
-                });
+        int currentIndex = 0;
+
+        for (Map.Entry<FileStateEnums, ArrayList<String>> entry : changes.entrySet()) {
+            FileStateEnums state = entry.getKey();
+            ArrayList<String> arrayOfPaths = entry.getValue();
+
+            for (String arrayOfPath : arrayOfPaths) {
+                checkboxes[currentIndex] = new CheckBox(arrayOfPath);
+                if(state == FileStateEnums.ADDED)
+                    checkboxes[currentIndex].setStyle("-fx-text-fill: green;");
+                else if(state == FileStateEnums.UNADDED)
+                    checkboxes[currentIndex].setStyle("-fx-text-fill: red;");
+
+                dynamicCheckBoxContainer.getChildren().add(checkboxes[currentIndex]);
+                currentIndex++;
+            }
+        }
+
+
+        Button executeButton = new Button("Execute"); //check if you do it a second time what will happen will it have two buttons or
+        executeButton.setOnAction(e -> handle_stanging());
+
+        dynamicCheckBoxContainer.getChildren().add(executeButton);
+    }
+
+    public void handle_stanging(){
+
+        for (CheckBox checkBox : checkboxes) {
+            if (checkBox.isSelected()) {
+                // Perform your operation on the selected path
+                allCheckedFilesForStaging.add(checkBox.getText());
+                System.out.println(checkBox.getText());
+            }
+        }
+        StagingManager.add_file_to_staging((ArrayList<String>) allCheckedFilesForStaging);
+        recheck_files();
     }
 
     public void show_line_changes(){
 
         changesLinesTextFlow = new TextFlow();
-        ArrayList<LineChanges> lineChangesList = FileComparator.get_current_changes_lines();
+        ArrayList<LineChanges> lineChangesList = ComparatorManager.get_current_changes_lines();
         Collections.sort(lineChangesList);
         lineChangesList
-                .forEach((changes)->{
-                    Color color;
-                    switch (changes.getColor()) {
-                        case ADDED -> color = Color.GREEN;
-                        case DELETED -> color = Color.RED;
-                        default -> color = Color.BLACK;
-                    }
+            .forEach((changes)->{
+                Color color;
+                switch (changes.getColor()) {
+                    case ADDED -> color = Color.GREEN;
+                    case DELETED -> color = Color.RED;
+                    default -> color = Color.BLACK;
+                }
 
-                    String currentLine = changes.line;
-                    Text text = new Text(currentLine + "\n");
-                    System.out.println(currentLine);
-                    text.setFill(color);
-                    changesLinesTextFlow.getChildren().add(text);
-                });
+                String currentLine = changes.line;
+                Text text = new Text(currentLine + "\n");
+                System.out.println(currentLine);
+                text.setFill(color);
+                changesLinesTextFlow.getChildren().add(text);
+            });
     }
 
     protected void handle_folder_selection(){
@@ -152,7 +189,10 @@ public class FXController {
         if(HandleRepository.ignored_files_doesnt_exist())
             HandleRepository.create_ignore_file();
 
-        FileManager.empty_current_file_state_array();
+        if(HandleRepository.zipped_folder_doesnt_exist())
+            HandleRepository.create_folder_of_zipped_folders();
+
+        StateManager.empty_state_staging_maps();
 
     }
 

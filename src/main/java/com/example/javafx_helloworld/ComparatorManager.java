@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FileComparator {
+public class ComparatorManager {
     static String oldFilePath;
     static String newFilePath;
     static Map<String, Integer> oldFileMap = new HashMap<>();

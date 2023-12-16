@@ -13,6 +13,7 @@ public class HandleRepository {
 
     private static final String PathOfRepository = "/.gitryad";
     private static final String PathOfIgnoreFile = "/.gitignoreryad";
+    final static String PathOfZippedFolders = "/.gitryad/ZippedFolders";
 
     public static void set_directory_path(String directoryPath) {
         HandleRepository.directoryPath = directoryPath;
@@ -39,6 +40,22 @@ public class HandleRepository {
         }catch(IOException e){
             throw new RuntimeException(e);
         }
+    }
+
+    public static void create_folder_of_zipped_folders(){
+        Path path = Paths.get(directoryPath + PathOfZippedFolders);
+        try{
+            Files.createDirectories(path);
+        }catch(IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean zipped_folder_doesnt_exist() {
+        String filePath = directoryPath + "/" + PathOfZippedFolders;
+        File file = new File(filePath);
+
+        return !file.exists();
     }
 
     public static boolean ignored_files_doesnt_exist() {

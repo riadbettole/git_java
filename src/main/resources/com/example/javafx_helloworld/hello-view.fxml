@@ -19,8 +19,12 @@
     </HBox>
 
     <VBox alignment="CENTER">
-        <TextArea fx:id="filesTextArea" editable="false" />
-        <TextFlow fx:id="changesTextFlow" prefHeight="200.0" prefWidth="200.0" />
+<!--        <TextArea fx:id="filesTextArea" editable="false" />-->
+        <TextFlow fx:id="stagedTextFlow" prefHeight="200.0" prefWidth="200.0" />
+        <TextFlow fx:id="unstagedTextFlow" prefHeight="200.0" prefWidth="200.0" />
+
+        <VBox fx:id="dynamicCheckBoxContainer"  spacing="10.0" />
+
         <Button fx:id="compareFilesButton" text="Compare two files" visible="false" />
     </VBox>
 
