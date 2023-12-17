@@ -4,62 +4,29 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.zip.DeflaterOutputStream;
-
 
 
 public class StagingManager {
 
-    static String PathOfZippedFolders = ".gitryad/ZippedFolders";
+    public static boolean saved_state_file_doesnt_exist() {
+        File file = new File(RepositoryManager.PathOfStagingFile);
 
-    public static void set_initial_path_Of_zipped_folders(String initialDirectory) {
-        PathOfZippedFolders = initialDirectory + "/" + PathOfZippedFolders;
+        return !file.exists();
     }
 
-    public static String convert_file_to_sha1(String filePath) {
-        try {
-            byte[] fileBytes = Files.readAllBytes(Path.of(filePath));
-
-            MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-            sha1.update(fileBytes);
-            byte[] hashBytes = sha1.digest();
-
-            StringBuilder hexString = new StringBuilder();
-            for (byte hashByte : hashBytes) {
-                hexString.append(String.format("%02x", hashByte));
-            }
-
-            return hexString.toString();
-        } catch (IOException|NoSuchAlgorithmException e) {
-            throw new RuntimeException();
-        }
-    }
-
-    public static void compress_file_content_into_folder(String inputFileName, String outputFileName){
-        try (FileInputStream in = new FileInputStream(inputFileName);
-             BufferedInputStream inBuffered = new BufferedInputStream(in);
-             FileOutputStream out = new FileOutputStream(outputFileName);
-             DeflaterOutputStream zipped = new DeflaterOutputStream(out);
-             BufferedOutputStream outBuffered = new BufferedOutputStream(zipped)){
-
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = inBuffered.read(buffer)) != -1) {
-                outBuffered.write(buffer, 0, bytesRead);
-            }
-
-
-        }catch(IOException e){
+    public static void create_state_file() {
+        File file = new File(RepositoryManager.PathOfStagingFile);
+        try{
+            Files.createFile(file.toPath());
+        } catch (IOException e){
             throw new RuntimeException(e);
         }
     }
 
 
-    public static void create_zipped_file_folder(String wholePathForFolder){
-        Path path = Paths.get(wholePathForFolder);
+    private static void create_zipped_file_folder(String parentPath){
+        Path path = Paths.get(parentPath);
         try{
             Files.createDirectories(path);
         }catch(IOException e){
@@ -67,65 +34,107 @@ public class StagingManager {
         }
     }
 
-    public static boolean zipped_file_folder_doesnt_exist(String firstTwoCharacters) {
-        String filePath = PathOfZippedFolders +"/" + firstTwoCharacters;
+    private static boolean zipped_file_folder_doesnt_exist(String filePath) {
         File file = new File(filePath);
-
         return !file.exists();
     }
 
-    public static void update_staging_file(String filePath,String hashedName){
+    private static void update_staging(HashedFile file){
         // get and update old staging to make a new one
-        HashMap<String, String> oldStaging = retrieve_staging();
-        oldStaging.put(filePath,hashedName);
+        String wholePathForFile = file.get_file_path();
+        HashMap<String,HashedFile> stagingData = load_staging_data();
+        stagingData.put(wholePathForFile,file);
 
-        //create and save state file
-        try (ObjectOutputStream outStagingFile = new ObjectOutputStream(new FileOutputStream(PathOfZippedFolders + "/staging"))) {
-            outStagingFile.writeObject(oldStaging);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        save_staging_data(stagingData);
     }
 
     @SuppressWarnings("unchecked")
-    public static HashMap<String, String> retrieve_staging(){
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(PathOfZippedFolders + "/staging"))) {
-            return (HashMap<String, String>) ois.readObject();
+    public static HashMap<String,HashedFile> load_staging_data(){
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(RepositoryManager.PathOfZippedFolders + "/staging"))) {
+            return (HashMap<String,HashedFile>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             // Return an empty map if the file doesn't exist (first run)
             return new HashMap<>();
         }
     }
 
-//    public static void add_file_to_staging(ArrayList<String> filePaths){
-    public static void add_file_to_staging(String filePath){
-//        String filePath = f.getPath();
-            String hashedName = convert_file_to_sha1(filePath);
-
-            String firstTwoCharacters = hashedName.substring(0, 2);
-            String hashedNameForFile = hashedName.substring(2);
-            String wholePathForFolder = PathOfZippedFolders + "/" + firstTwoCharacters;
-            String wholePathForFile = wholePathForFolder + "/" + hashedNameForFile;
-
-            if(zipped_file_folder_doesnt_exist(firstTwoCharacters)) {
-                create_zipped_file_folder(wholePathForFolder);
-            }
-
-            compress_file_content_into_folder(filePath,wholePathForFile);
-            update_staging_file(filePath, hashedName);
-            
-    }
-    
-    public static void delete_file_from_staging(String filePath){
-        // get and update old staging to make a new one
-        HashMap<String, String> oldStaging = retrieve_staging();
-        oldStaging.remove(filePath);
-
-        //create and save state file
-        try (ObjectOutputStream outStagingFile = new ObjectOutputStream(new FileOutputStream(PathOfZippedFolders + "/staging"))) {
-            outStagingFile.writeObject(oldStaging);
+    private static void save_staging_data(HashMap<String, HashedFile> stagingData) {
+        try (ObjectOutputStream outStagingFile = new ObjectOutputStream(new FileOutputStream(RepositoryManager.PathOfStagingFile))) {
+            outStagingFile.writeObject(stagingData);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
+//    public static void add_file_to_staging(ArrayList<String> filePaths){
+    public static void add_file_to_staging(HashedFile file){
+//        String filePath = f.getPath();
+        file.sha1_the_file();
+        file.setup_file_parent_and_zip_path();
+
+        if(zipped_file_folder_doesnt_exist(file.get_file_path())) {
+            create_zipped_file_folder(file.get_parent_path());
+        }
+
+        String zipPath = file.get_zip_path();
+        String wholePathForFile = file.get_file_path();
+        CompressionManager.compress_file_content_into_zipped_folder(wholePathForFile, zipPath);
+        file.setState(FileStateEnums.ADDED);
+        update_staging(file);
+            
+    }
+    
+    public static void delete_file_from_staging(HashedFile file){
+        // get and update old staging to make a new one
+        HashMap<String, HashedFile> stagingData = load_staging_data();
+        String filepath = file.get_file_path();
+        stagingData.remove(filepath);
+
+        save_staging_data(stagingData);
+    }
+
+    public static void restore_file_from_staging(HashedFile file) {
+        String zipPath = file.get_zip_path();
+        String wholePathForFile = file.get_file_path();
+
+        CompressionManager.uncompress_file_content_into_its_place(zipPath, wholePathForFile);
+    }
+
+    public static HashMap<FileStateEnums, ArrayList<HashedFile>> detect_staged_file_changes(){
+        Map<String, HashedFile> allPresentFiles = FileManager.get_all_files_present();
+        Map<String,HashedFile> stagingData = load_staging_data();
+
+        HashMap<FileStateEnums, ArrayList<HashedFile>> changes = new HashMap<>();
+
+        stagingData.forEach((filePath, hashedFile)->{
+            boolean fileExist = allPresentFiles.containsKey(filePath);
+
+            if(!fileExist){
+                hashedFile.setState(FileStateEnums.DELETED);
+                changes.computeIfAbsent(FileStateEnums.DELETED, k -> new ArrayList<>()).add(hashedFile);
+                return;
+            }
+
+            FileStateEnums state = file_is_not_modified(hashedFile, allPresentFiles) ?
+                    FileStateEnums.ADDED : FileStateEnums.MODIFIED;
+            hashedFile.setState(state);
+            changes.computeIfAbsent(state, k -> new ArrayList<>()).add(hashedFile);
+
+            allPresentFiles.remove(filePath);
+        });
+
+        allPresentFiles.forEach((filePath, hashedFile) -> {
+            changes.computeIfAbsent(FileStateEnums.UNADDED, k -> new ArrayList<>()).add(hashedFile);
+            hashedFile.setState(FileStateEnums.UNADDED);
+        });
+
+        return changes;
+    }
+
+    private static boolean file_is_not_modified(HashedFile hashedFile, Map<String, HashedFile> allPresentFiles) {
+        String filePath = hashedFile.get_file_path();
+        return hashedFile.get_hashed_name()
+                .equals( allPresentFiles.get(filePath).get_hashed_name() );
+    }
 }
+

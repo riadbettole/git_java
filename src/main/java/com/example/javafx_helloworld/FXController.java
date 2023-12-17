@@ -2,13 +2,11 @@ package com.example.javafx_helloworld;
 
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.stage.DirectoryChooser;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
 
@@ -20,12 +18,10 @@ import java.util.List;
 
 public class FXController {
 
-//    @FXML
-//    private TextArea filesTextArea;
-    @FXML
-    private TextFlow unstagedTextFlow;
     @FXML
     private Button compareFilesButton;
+    @FXML
+    private Button recheckFilesButton;
 
     private TextFlow changesLinesTextFlow;
 
@@ -33,11 +29,9 @@ public class FXController {
 
     @FXML
     private VBox dynamicCheckBoxContainer;
-//    CheckBox[] checkboxes;
     CustomCheckBox[] customCheckBoxes;
-//    List<String> allCheckedFilesForStaging = new ArrayList<>();
 
-    private void handle_compare_button(){
+    private void show_compare_button() {
         compareFilesButton.setVisible(true);
         compareFilesButton.setOnAction(event -> {
             compare_files();
@@ -52,49 +46,46 @@ public class FXController {
         });
     }
 
+    private void show_recheck_button() {
+        recheckFilesButton.setVisible(true);
+    }
+
     @FXML
-    protected void handle_show_files_button() {
-        handle_folder_selection();
+    protected void open_project() {
 
-        handle_compare_button();
+        RepositoryManager.select_folder_of_project();
+        directoryPath = RepositoryManager.get_directory_path();
+        //RepositoryManager.set_directory_path(directoryPath);
 
-        if(directoryPath == null || directoryPath.isEmpty()){
+        if (directoryPath == null || directoryPath.isEmpty()) {
             return;
         }
 
-        StateManager.set_initial_directory(directoryPath);
-        StateManager.read_ignore_file();
-        StagingManager.set_initial_path_Of_zipped_folders(directoryPath);
+        show_recheck_button();
+        show_compare_button();
 
         update_everything();
     }
 
-    public void update_everything(){
-        //filesTextArea.clear();
+    public void update_everything() {
 
-        StateManager.find_all_files(directoryPath);
-
-//        Map<String, Long> currentStateOfFile = StateManager.get_current_state_files();
-//        currentStateOfFile.forEach((filePath, v) -> filesTextArea.appendText(filePath + "\n"));
-
-        if(StateManager.saved_state_file_exist()) {
-            StateManager.detect_file_changes();
-            unstagedTextFlow.getChildren().clear();
-            show_file_changes();
+        FileManager.find_all_files(directoryPath);
+        System.out.println(RepositoryManager.PathOfStagingFile);
+        if (StagingManager.saved_state_file_doesnt_exist()) {
+            StagingManager.create_state_file();
         }
-        StateManager.save_current_file_state();
+        show_file_changes();
     }
 
     @FXML
-    public void recheck_files(){
-        StateManager.empty_state_staging_maps();
+    public void recheck_files() {
         update_everything();
     }
 
     @FXML
-    public void compare_files(){
-        File f = new File(directoryPath+"/720_576.ps1");
-        File f2 = new File(directoryPath+"/720_576_1.ps1");
+    public void compare_files() {
+        File f = new File(directoryPath + "/720_576.ps1");
+        File f2 = new File(directoryPath + "/720_576_1.ps1");
 
         ComparatorManager.set_old_file_path(f.getPath());
         ComparatorManager.set_new_file_path(f2.getPath());
@@ -104,23 +95,33 @@ public class FXController {
         ComparatorManager.compare();
     }
 
-    public void show_file_changes(){
-        Map<FileStateEnums, ArrayList<String>> changes = StateManager.get_current_changes_files();
+    public void show_file_changes() {
+        Map<FileStateEnums, ArrayList<HashedFile>> changes = StagingManager.detect_staged_file_changes();
         dynamicCheckBoxContainer.getChildren().clear();
 
         int numberOfStrings = changes.values().stream().mapToInt(List::size).sum();
 
         customCheckBoxes = new CustomCheckBox[numberOfStrings];
         int index = 0;
+        FileStateEnums[] orderStates = {FileStateEnums.ADDED, FileStateEnums.MODIFIED, FileStateEnums.DELETED, FileStateEnums.UNADDED};
 
-        for (Map.Entry<FileStateEnums, ArrayList<String>> entry : changes.entrySet()) {
-            FileStateEnums state = entry.getKey();
-            ArrayList<String> arrayOfPaths = entry.getValue();
+        for (FileStateEnums state : orderStates) {
+            if (!changes.containsKey(state)) continue;
+            ArrayList<HashedFile> arrayOfPaths = changes.get(state);
 
+            Text text = new Text();
+            switch (state) {
+                case ADDED -> text.setText("STAGED" + ": (select to unstage)\n");
+                case DELETED -> text.setText("DELETED" + ": (select to restore)\n");
+                case MODIFIED -> text.setText("MODIFIED" + ": (select to restore)\n");
+                default -> text.setText("UNSTAGED" + ": (select to stage)\n");
+            }
 
-            for (String filePath : arrayOfPaths) {
+            dynamicCheckBoxContainer.getChildren().add(text);
 
-                customCheckBoxes[index] = new CustomCheckBox(filePath, state);
+            for (HashedFile hashedFile : arrayOfPaths) {
+
+                customCheckBoxes[index] = new CustomCheckBox(hashedFile);
 
                 dynamicCheckBoxContainer.getChildren().add(customCheckBoxes[index]);
                 index++;
@@ -134,99 +135,46 @@ public class FXController {
         dynamicCheckBoxContainer.getChildren().add(executeButton);
     }
 
-    public void handle_stanging(){
-
+    public void handle_stanging() {
 
         for (CustomCheckBox customCheckBox : customCheckBoxes) {
             if (customCheckBox.isSelected()) {
-//                allCheckedFilesForStaging.add(customCheckBox.getFilePath());
-                if(customCheckBox.getFileState() == FileStateEnums.UNADDED){
-                    StagingManager.add_file_to_staging(customCheckBox.getFilePath());
+                HashedFile hashedFile = customCheckBox.get_hashed_file();
+                switch (hashedFile.get_state()) {
+                    case UNADDED -> StagingManager.add_file_to_staging(hashedFile);
+                    case ADDED -> StagingManager.delete_file_from_staging(hashedFile);
+                    case DELETED -> StagingManager.restore_file_from_staging(hashedFile);
+//                    case MODIFIED ->
+                    default -> StagingManager.restore_file_from_staging(hashedFile);
                 }
-                else{
-                    StagingManager.delete_file_from_staging(customCheckBox.getFilePath());
-                }
-                System.out.println(customCheckBox.getFilePath());
+
+                System.out.println(hashedFile.get_file_path());
             }
         }
-//        StagingManager.add_file_to_staging((ArrayList<String>) allCheckedFilesForStaging);
         recheck_files();
     }
 
-    public void show_line_changes(){
+    public void show_line_changes() {
 
         changesLinesTextFlow = new TextFlow();
         ArrayList<LineChanges> lineChangesList = ComparatorManager.get_current_changes_lines();
         Collections.sort(lineChangesList);
         lineChangesList
-            .forEach((changes)->{
-                Color color;
-                switch (changes.getColor()) {
-                    case ADDED -> color = Color.GREEN;
-                    case DELETED -> color = Color.RED;
-                    default -> color = Color.BLACK;
-                }
+                .forEach((changes) -> {
+                    Color color;
+                    switch (changes.getColor()) {
+                        case ADDED -> color = Color.GREEN;
+                        case DELETED -> color = Color.RED;
+                        default -> color = Color.BLACK;
+                    }
 
-                String currentLine = changes.line;
-                Text text = new Text(currentLine + "\n");
-                System.out.println(currentLine);
-                text.setFill(color);
-                changesLinesTextFlow.getChildren().add(text);
-            });
-    }
-
-    protected void handle_folder_selection(){
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("Select Directory");
-
-        directoryChooser.setInitialDirectory(new File("."));
-        File selectedDirectory = directoryChooser.showDialog(null);
-
-        if (selectedDirectory == null)
-            return;
-
-        directoryPath = selectedDirectory.getAbsolutePath();
-
-        HandleRepository.set_directory_path(directoryPath);
-
-        if(HandleRepository.repository_doesnt_exist())
-            HandleRepository.create_repository_folder();
-
-        if(HandleRepository.ignored_files_doesnt_exist())
-            HandleRepository.create_ignore_file();
-
-        if(HandleRepository.zipped_folder_doesnt_exist())
-            HandleRepository.create_folder_of_zipped_folders();
-
-        StateManager.empty_state_staging_maps();
-
+                    String currentLine = changes.line;
+                    Text text = new Text(currentLine + "\n");
+                    System.out.println(currentLine);
+                    text.setFill(color);
+                    changesLinesTextFlow.getChildren().add(text);
+                });
     }
 
 }
 
-class CustomCheckBox extends CheckBox {
-    private final String filePath;
-    private final FileStateEnums fileState;
-
-    public CustomCheckBox(String filePath, FileStateEnums fileState) {
-        super(filePath);
-        this.filePath = filePath;
-        this.fileState = fileState;
-        updateStyle();
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public FileStateEnums getFileState() {
-        return fileState;
-    }
-
-    public void updateStyle() {
-        if (fileState == FileStateEnums.ADDED)
-            setStyle("-fx-text-fill: green;");
-        else if (fileState == FileStateEnums.UNADDED)
-            setStyle("-fx-text-fill: red;");
-    }
-}
