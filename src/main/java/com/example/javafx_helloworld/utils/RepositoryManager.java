@@ -158,12 +158,14 @@ public class RepositoryManager {
     }
 
     private static void delete_directory(File current_directory) {
-        for (File subfile : current_directory.listFiles()) {
+        File [] files = current_directory.listFiles();
+        assert files != null;
+        for (File subfile : files) {
             if (subfile.isDirectory()) {
                 delete_directory(subfile);
             }
-            // delete files and empty subfolders
-            subfile.delete();
+
+            if(subfile.delete()) return;
         }
     }
 
