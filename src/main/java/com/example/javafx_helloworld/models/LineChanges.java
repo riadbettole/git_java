@@ -26,7 +26,4 @@ public class LineChanges implements Comparable<LineChanges> {
         return line;
     }
 
-//    public void setLine(String line) {
-//        this.line = line;
-//    }
 }
