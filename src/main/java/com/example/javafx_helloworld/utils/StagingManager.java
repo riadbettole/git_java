@@ -2,9 +2,6 @@ package com.example.javafx_helloworld.utils;
 
 import com.example.javafx_helloworld.enums.FileStateEnums;
 import com.example.javafx_helloworld.models.HashedFile;
-import com.example.javafx_helloworld.utils.CompressionManager;
-import com.example.javafx_helloworld.utils.FileManager;
-import com.example.javafx_helloworld.utils.RepositoryManager;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -25,6 +22,10 @@ public class StagingManager {
         File file = new File(RepositoryManager.PathOfStagingFile);
         try{
             Files.createFile(file.toPath());
+            HashMap<String,HashedFile> x = new HashMap<>();
+            HashedFile y = new HashedFile("x");
+            x.put("x", y);
+            save_staging_data(x);
         } catch (IOException e){
             throw new RuntimeException(e);
         }
@@ -56,13 +57,13 @@ public class StagingManager {
 
     @SuppressWarnings("unchecked")
     public static HashMap<String,HashedFile> load_staging_data(){
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(RepositoryManager.PathOfZippedFolders + "/staging"))) {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(RepositoryManager.PathOfStagingFile))) {
             return (HashMap<String,HashedFile>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            // Return an empty map if the file doesn't exist (first run)
             return new HashMap<>();
         }
     }
+
 
     private static void save_staging_data(HashMap<String, HashedFile> stagingData) {
         try (ObjectOutputStream outStagingFile = new ObjectOutputStream(new FileOutputStream(RepositoryManager.PathOfStagingFile))) {
@@ -72,9 +73,7 @@ public class StagingManager {
         }
     }
 
-//    public static void add_file_to_staging(ArrayList<String> filePaths){
     public static void add_file_to_staging(HashedFile file){
-//        String filePath = f.getPath();
         file.sha1_the_file();
         file.setup_file_parent_and_zip_path();
 

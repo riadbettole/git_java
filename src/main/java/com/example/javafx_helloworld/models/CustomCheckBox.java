@@ -1,7 +1,6 @@
 package com.example.javafx_helloworld.models;
 
 import com.example.javafx_helloworld.enums.FileStateEnums;
-import com.example.javafx_helloworld.models.HashedFile;
 import javafx.scene.control.CheckBox;
 
 public class CustomCheckBox extends CheckBox {

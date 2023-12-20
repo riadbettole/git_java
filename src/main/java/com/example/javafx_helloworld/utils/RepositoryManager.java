@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 
 public class RepositoryManager {
 
@@ -107,6 +106,14 @@ public class RepositoryManager {
         return !file.exists();
     }
 
+    public static boolean repository_doesnt_exist_at_this_path(String directoryPath) {
+        String filePath = directoryPath + "/.gitryad";
+
+        File file = new File(filePath);
+
+        return !file.exists();
+    }
+
     public static void files_and_folders_exist(){
         if (repository_doesnt_exist())
             create_repository_folder();
@@ -138,25 +145,26 @@ public class RepositoryManager {
 
     public static void delete_this_repo() {
         File current_directory = new File(PathOfRepository);
-        deleteFolder(current_directory);
         try{
+//        Thread.sleep(10000);
+//        FileUtils.forceDelete(current_directory);
+        delete_directory(current_directory);
         Files.deleteIfExists(Paths.get(PathOfRepository));
         Files.deleteIfExists(Paths.get(PathOfIgnoreFile));
-        }catch(IOException e){
+//        }catch(InterruptedException | IOException e){
+        }catch( IOException e){
             throw new RuntimeException(e);
         }
-
-        select_folder_of_project();
     }
 
-    static void deleteFolder(File file) {
-        for (File subFile : file.listFiles()) {
-            if(subFile.isDirectory()) {
-                deleteFolder(subFile);
-            } else {
-                subFile.delete();
+    private static void delete_directory(File current_directory) {
+        for (File subfile : current_directory.listFiles()) {
+            if (subfile.isDirectory()) {
+                delete_directory(subfile);
             }
+            // delete files and empty subfolders
+            subfile.delete();
         }
-        file.delete();
     }
+
 }

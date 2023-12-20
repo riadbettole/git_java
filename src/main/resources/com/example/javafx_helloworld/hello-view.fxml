@@ -16,10 +16,10 @@
         <Button onAction="#open_project" text="Open Project" />
         <Button fx:id="recheckFilesButton" onAction="#recheck_files" text="Check Changes" visible="false"/>
     </HBox>
-    <Text text="RECENT PROJECTS"/>
+    <Text  fx:id="textNameProject" text="RECENT PROJECTS"/>
     <VBox fx:id="recentProjectsContainer"/>
 
-    <VBox alignment="CENTER"/>
+
 <!--        <TextArea fx:id="filesTextArea" editable="false" />-->
 <!--        <TextFlow fx:id="stagedTextFlow" prefHeight="200.0" prefWidth="200.0" />-->
 <!--        <TextFlow fx:id="unstagedTextFlow" prefHeight="200.0" prefWidth="200.0" />-->

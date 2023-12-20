@@ -38,8 +38,10 @@ public class FXController {
     @FXML
     private Button recheckFilesButton;
 
-    private TextFlow changesLinesTextFlow;
+    @FXML
+    private Text textNameProject;
 
+    private TextFlow changesLinesTextFlow;
     private String directoryPath;
 
     @FXML
@@ -63,6 +65,8 @@ public class FXController {
 
         RepositoryManager.select_folder_of_project();
         directoryPath = RepositoryManager.get_directory_path();
+
+        textNameProject.setText("RECENT PROJECTS : current is " + directoryPath);
         recentProjects.push(directoryPath);
         update_recent_project_order();
         //RepositoryManager.set_directory_path(directoryPath);
@@ -77,9 +81,25 @@ public class FXController {
         update_everything();
     }
 
-    protected void open_project_recent_project(String _directoryPath) {
+    private void warning_project_not_found(){
+        Stage resultStage = new Stage();
+        resultStage.setTitle("Project Not Found");
+        Text text = new Text("Project is not found in this path");
+        VBox vBox = new VBox(text);
 
+        Scene resultScene = new Scene(vBox, 300, 200);
+        resultStage.setScene(resultScene);
+        resultStage.show();
+    }
+
+    protected void open_project_recent_project(String _directoryPath) {
+        if (RepositoryManager.repository_doesnt_exist_at_this_path(_directoryPath)) {
+            warning_project_not_found();
+            return;
+        }
         directoryPath = _directoryPath;
+        textNameProject.setText("RECENT PROJECTS : current is " + directoryPath);
+
         RepositoryManager.set_directory_path(directoryPath);
         RepositoryManager.files_and_folders_exist();
 
@@ -361,7 +381,13 @@ public class FXController {
             vbox.setAlignment(Pos.CENTER);
             Text text = new Text("Do you really want to delete this repo?");
             Button button = new Button("Confirm");
-            button.setOnAction(e->RepositoryManager.delete_this_repo());
+            button.setOnAction(e->
+            {
+                RepositoryManager.delete_this_repo();
+                dynamicCheckBoxContainer.getChildren().clear();
+                textNameProject.setText("RECENT PROJECTS :");
+                warningStage.close();
+            });
             vbox.getChildren().add(text);
             vbox.getChildren().add(button);
             Scene warningScene = new Scene(vbox,300,200);
