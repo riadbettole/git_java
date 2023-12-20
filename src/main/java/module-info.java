@@ -5,4 +5,12 @@ module com.example.javafx_helloworld {
 
     opens com.example.javafx_helloworld to javafx.fxml;
     exports com.example.javafx_helloworld;
+    exports com.example.javafx_helloworld.controllers;
+    opens com.example.javafx_helloworld.controllers to javafx.fxml;
+    exports com.example.javafx_helloworld.enums;
+    opens com.example.javafx_helloworld.enums to javafx.fxml;
+    exports com.example.javafx_helloworld.models;
+    opens com.example.javafx_helloworld.models to javafx.fxml;
+    exports com.example.javafx_helloworld.utils;
+    opens com.example.javafx_helloworld.utils to javafx.fxml;
 }

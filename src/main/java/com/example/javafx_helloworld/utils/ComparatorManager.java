@@ -1,4 +1,7 @@
-package com.example.javafx_helloworld;
+package com.example.javafx_helloworld.utils;
+
+import com.example.javafx_helloworld.enums.LineState;
+import com.example.javafx_helloworld.models.LineChanges;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

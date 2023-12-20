@@ -1,4 +1,6 @@
-package com.example.javafx_helloworld;
+package com.example.javafx_helloworld.utils;
+
+import com.example.javafx_helloworld.models.HashedFile;
 
 import java.io.*;
 import java.util.*;
@@ -62,5 +64,9 @@ public class FileManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void clear_current_all_files_present() {
+        allFilesPresent.clear();
     }
 }

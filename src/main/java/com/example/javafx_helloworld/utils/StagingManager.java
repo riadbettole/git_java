@@ -1,4 +1,10 @@
-package com.example.javafx_helloworld;
+package com.example.javafx_helloworld.utils;
+
+import com.example.javafx_helloworld.enums.FileStateEnums;
+import com.example.javafx_helloworld.models.HashedFile;
+import com.example.javafx_helloworld.utils.CompressionManager;
+import com.example.javafx_helloworld.utils.FileManager;
+import com.example.javafx_helloworld.utils.RepositoryManager;
 
 import java.io.*;
 import java.nio.file.Files;

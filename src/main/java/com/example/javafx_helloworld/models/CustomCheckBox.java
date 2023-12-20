@@ -1,8 +1,10 @@
-package com.example.javafx_helloworld;
+package com.example.javafx_helloworld.models;
 
+import com.example.javafx_helloworld.enums.FileStateEnums;
+import com.example.javafx_helloworld.models.HashedFile;
 import javafx.scene.control.CheckBox;
 
-class CustomCheckBox extends CheckBox {
+public class CustomCheckBox extends CheckBox {
     private final HashedFile hashedFile;
 
     public CustomCheckBox(HashedFile hashedFile) {

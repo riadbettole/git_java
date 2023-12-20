@@ -1,4 +1,6 @@
-package com.example.javafx_helloworld;
+package com.example.javafx_helloworld.models;
+
+import com.example.javafx_helloworld.enums.LineState;
 
 public class LineChanges implements Comparable<LineChanges> {
     String line;
@@ -18,5 +20,13 @@ public class LineChanges implements Comparable<LineChanges> {
     @Override
     public int compareTo(LineChanges other) {
         return Integer.compare(this.index, other.index);
+    }
+
+    public String getLine() {
+        return line;
+    }
+
+    public void setLine(String line) {
+        this.line = line;
     }
 }

@@ -1,4 +1,4 @@
-package com.example.javafx_helloworld;
+package com.example.javafx_helloworld.enums;
 
 public enum LineState {
     ADDED, PREVIOUS, DELETED

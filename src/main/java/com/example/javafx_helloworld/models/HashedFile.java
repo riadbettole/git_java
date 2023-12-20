@@ -1,4 +1,7 @@
-package com.example.javafx_helloworld;
+package com.example.javafx_helloworld.models;
+
+import com.example.javafx_helloworld.utils.RepositoryManager;
+import com.example.javafx_helloworld.enums.FileStateEnums;
 
 import java.io.IOException;
 import java.io.Serializable;

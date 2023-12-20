@@ -1,4 +1,4 @@
-package com.example.javafx_helloworld;
+package com.example.javafx_helloworld.utils;
 
 import javafx.stage.DirectoryChooser;
 
@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 public class RepositoryManager {
 
@@ -42,7 +43,7 @@ public class RepositoryManager {
         try {
             Files.createFile(path);
             try (BufferedWriter writer = Files.newBufferedWriter(path)) {
-                String file_to_hide = ".gitryad\n";
+                String file_to_hide = ".gitryad\n.gitignoreryad\n";
                 writer.write(file_to_hide);
             }
         } catch (IOException e) {
@@ -59,11 +60,34 @@ public class RepositoryManager {
         }
     }
 
+    public static void create_recent_projects_file() {
+        String userHome = System.getProperty("user.home");
+        String relativePath = "Documents";
+        Path documentsPath = Paths.get(userHome, relativePath);
+        Path filePath = documentsPath.resolve("recent_folders_git");
+
+        try {
+            Files.createDirectories(filePath.getParent());
+            Files.createFile(filePath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static boolean zipped_folder_doesnt_exist() {
         String filePath = PathOfZippedFolders;
         File file = new File(filePath);
 
         return !file.exists();
+    }
+
+    public static boolean recent_projects_file_doesnt_exist() {
+        String userHome = System.getProperty("user.home");
+        String relativePath = "Documents";
+        Path documentsPath = Paths.get(userHome, relativePath);
+        Path filePath = documentsPath.resolve("recent_folders_git");
+
+        return !Files.exists(filePath);
     }
 
 
@@ -83,6 +107,20 @@ public class RepositoryManager {
         return !file.exists();
     }
 
+    public static void files_and_folders_exist(){
+        if (repository_doesnt_exist())
+            create_repository_folder();
+
+        if (ignored_files_doesnt_exist())
+            create_ignore_file();
+
+        if (zipped_folder_doesnt_exist())
+            create_folder_of_zipped_folders();
+
+        if(recent_projects_file_doesnt_exist())
+            create_recent_projects_file();
+    }
+
     public static void select_folder_of_project() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Directory");
@@ -94,15 +132,31 @@ public class RepositoryManager {
             return;
 
         set_directory_path(selectedDirectory.getAbsolutePath());
+        files_and_folders_exist();
 
-        if (repository_doesnt_exist())
-            create_repository_folder();
+    }
 
-        if (ignored_files_doesnt_exist())
-            create_ignore_file();
+    public static void delete_this_repo() {
+        File current_directory = new File(PathOfRepository);
+        deleteFolder(current_directory);
+        try{
+        Files.deleteIfExists(Paths.get(PathOfRepository));
+        Files.deleteIfExists(Paths.get(PathOfIgnoreFile));
+        }catch(IOException e){
+            throw new RuntimeException(e);
+        }
 
-        if (zipped_folder_doesnt_exist())
-            create_folder_of_zipped_folders();
+        select_folder_of_project();
+    }
 
+    static void deleteFolder(File file) {
+        for (File subFile : file.listFiles()) {
+            if(subFile.isDirectory()) {
+                deleteFolder(subFile);
+            } else {
+                subFile.delete();
+            }
+        }
+        file.delete();
     }
 }

@@ -5,7 +5,8 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox  spacing="20.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.javafx_helloworld.FXController">
+<?import javafx.scene.text.Text?>
+<VBox spacing="20.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.javafx_helloworld.controllers.FXController">
 
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
@@ -15,17 +16,22 @@
         <Button onAction="#open_project" text="Open Project" />
         <Button fx:id="recheckFilesButton" onAction="#recheck_files" text="Check Changes" visible="false"/>
     </HBox>
+    <Text text="RECENT PROJECTS"/>
+    <VBox fx:id="recentProjectsContainer"/>
 
-    <VBox alignment="CENTER">
+    <VBox alignment="CENTER"/>
 <!--        <TextArea fx:id="filesTextArea" editable="false" />-->
 <!--        <TextFlow fx:id="stagedTextFlow" prefHeight="200.0" prefWidth="200.0" />-->
 <!--        <TextFlow fx:id="unstagedTextFlow" prefHeight="200.0" prefWidth="200.0" />-->
 
-        <VBox fx:id="dynamicCheckBoxContainer"  spacing="10.0" />
+        <VBox fx:id="dynamicCheckBoxContainer"  spacing="10.0">
+            <HBox fx:id="executeButtonContainer"  spacing="10.0"/>
+        </VBox>
 
+    <HBox spacing="10.0">
+        <Button fx:id="commitButton" text="Commit" visible="false"/>
         <Button fx:id="compareFilesButton" text="Compare two files" visible="false" />
-    </VBox>
-
-
+        <Button fx:id="deleteRepoButton" text="Delete this repo" visible="false"/>
+    </HBox>
 
 </VBox>

@@ -1,4 +1,4 @@
-package com.example.javafx_helloworld;
+package com.example.javafx_helloworld.utils;
 
 import java.io.*;
 import java.nio.file.Files;
