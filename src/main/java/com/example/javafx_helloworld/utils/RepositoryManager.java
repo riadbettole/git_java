@@ -17,6 +17,7 @@ public class RepositoryManager {
     public static String PathOfIgnoreFile ;
     public static String PathOfZippedFolders ;
     public static String PathOfStagingFile ;
+    public static String PathOfCommitFile ;
 
     public static void set_directory_path(String _directoryPath) {
         directoryPath = _directoryPath;
@@ -24,6 +25,7 @@ public class RepositoryManager {
         PathOfIgnoreFile = directoryPath + "/.gitignoreryad";
         PathOfZippedFolders = directoryPath + "/.gitryad/ZippedFolders";
         PathOfStagingFile = directoryPath + "/.gitryad/ZippedFolders/staging";
+        PathOfCommitFile = directoryPath + "/.gitryad/linkedCommits";
     }
     public static String get_directory_path() { return directoryPath; }
 

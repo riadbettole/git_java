@@ -120,8 +120,14 @@ public class StagingManager {
                 return;
             }
 
-            FileStateEnums state = file_is_not_modified(hashedFile, allPresentFiles) ?
-                    FileStateEnums.ADDED : FileStateEnums.MODIFIED;
+            FileStateEnums state ;
+
+            if(file_is_not_modified(hashedFile, allPresentFiles) && !hashedFile.isCommited()){
+                state = FileStateEnums.ADDED;
+            }else{
+                state = FileStateEnums.MODIFIED;
+            }
+
             hashedFile.setState(state);
             changes.computeIfAbsent(state, k -> new ArrayList<>()).add(hashedFile);
 
@@ -140,6 +146,16 @@ public class StagingManager {
         String filePath = hashedFile.get_file_path();
         return hashedFile.get_hashed_name()
                 .equals( allPresentFiles.get(filePath).get_hashed_name() );
+    }
+
+    private  static void clear_staging(){
+        HashMap<String,HashedFile> stagingData = load_staging_data();
+        stagingData.forEach((k,v)->{
+            if(stagingData.get(k).get_state() == FileStateEnums.ADDED){
+                v.setCommited(true);
+            }
+        });
+        save_staging_data(stagingData);
     }
 }
 

@@ -16,9 +16,11 @@ public class HashedFile implements Serializable {
     String zipPath;
     String hashedName;
     FileStateEnums state;
+    boolean commited;
 
     public HashedFile(String filePath) {
         this.filePath = filePath;
+        this.commited = false;
     }
 
     public void sha1_the_file() {
@@ -81,5 +83,13 @@ public class HashedFile implements Serializable {
 
     public void setState(FileStateEnums state) {
         this.state = state;
+    }
+
+    public boolean isCommited() {
+        return commited;
+    }
+
+    public void setCommited(boolean commited) {
+        this.commited = commited;
     }
 }
