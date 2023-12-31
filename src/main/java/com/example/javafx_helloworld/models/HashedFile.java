@@ -21,6 +21,8 @@ public class HashedFile implements Serializable {
     public HashedFile(String filePath) {
         this.filePath = filePath;
         this.commited = false;
+        sha1_the_file();
+        setup_file_parent_and_zip_path();
     }
 
     public void sha1_the_file() {

@@ -9,54 +9,52 @@ public class FileManager {
 
     private static final Map<String, HashedFile> allFilesPresent = new HashMap<>();
 
-    private static final Set<String> filesToIgnore = new HashSet<>();
-
-    public static Map<String, HashedFile> get_all_files_present() {
+    public static Map<String, HashedFile> get_all_present_files() {
         return allFilesPresent;
     }
+    public static void clear_current_state_of_project() {
+        allFilesPresent.clear();
+    }
 
-    public static void find_all_files(String current) {
+    public static void get_into_current_files(String filePath) {
 
-        //File current_directory = new File(InitialDirectory); not using that cuz of recursion
-        File current_directory = new File(current);
+        HashedFile sf = new HashedFile(filePath);
+        sf.sha1_the_file();
+        allFilesPresent.put(filePath, sf);
+    }
+    public static void get_all_present_files_in_directory(String current) {
+        File currentProjectDirectory = new File(current);
 
-        if (!current_directory.exists() || !current_directory.isDirectory()) {
+        if (!currentProjectDirectory.exists() || !currentProjectDirectory.isDirectory()) {
             return;
         }
 
-        File[] files = current_directory.listFiles();
+        File[] files = currentProjectDirectory.listFiles();
         if (files == null) return;
 
-        read_ignore_file();
+        Set<String> filesToIgnore = load_ignore_file();
 
         for (File file : files) {
             String filePath = file.getPath();
-            if (check_if_file_is_ignored(file.getName())) {
+            if (check_if_file_is_ignored(filesToIgnore, file.getName())) {
                 continue;
             }
 
             if (file.isDirectory()) {
-                find_all_files(filePath);
+                get_all_present_files_in_directory(filePath);
             } else
                 get_into_current_files(filePath);
         }
 
     }
 
-    public static void get_into_current_files(String filePath) {
-        HashedFile sf = new HashedFile(filePath);
-        sf.sha1_the_file();
-        allFilesPresent.put(filePath, sf);
-    }
-
-    public static boolean check_if_file_is_ignored(String filePathName) {
+    public static boolean check_if_file_is_ignored(Set<String> filesToIgnore, String filePathName) {
         return filesToIgnore.contains(filePathName);
     }
+    public static Set<String> load_ignore_file() {
+        Set<String> filesToIgnore = new HashSet<>();
 
-    public static void read_ignore_file() {
-        String filePath = RepositoryManager.PathOfIgnoreFile;
-        File ignoredFoldersFile = new File(filePath);
-        try (BufferedReader reader = new BufferedReader(new FileReader(ignoredFoldersFile))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(RepositoryManager.PathOfIgnoreFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 filesToIgnore.add(line.trim());
@@ -64,9 +62,7 @@ public class FileManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return filesToIgnore;
     }
 
-    public static void clear_current_all_files_present() {
-        allFilesPresent.clear();
-    }
 }
