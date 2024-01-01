@@ -54,14 +54,12 @@ public class FXController {
         checkoutButton    .setVisible(true);
     }
     @FXML private void open_project() {
-
         RepositoryManager.select_folder_of_project();
         directoryPath = RepositoryManager.get_directory_path();
 
         textNameProject.setText("RECENT PROJECTS : current is " + directoryPath);
         recentProjects.push(directoryPath);
         update_recent_project_order();
-        //RepositoryManager.set_directory_path(directoryPath);
 
         if (directoryPath == null || directoryPath.isEmpty()) {
             return;
@@ -327,9 +325,13 @@ public class FXController {
         button.setOnAction(e->
         {
             String userInput = textArea.getText();
-            CommitManager.add_new_commit(userInput);
+
+            if(BranchManager.currentBranch == null){
+                BranchManager.currentBranch = new Branch("Master");
+            }
+            BranchManager.add_new_commit(userInput);
+
             recheck_the_state();
-            BranchManager.getBranches().computeIfAbsent("Master",k->new Branch());
             commitStage.close();
         });
 
@@ -374,18 +376,14 @@ public class FXController {
 
         ToggleGroup toggleGroup = new ToggleGroup();
 
-        LinkedList<Commit> allCommits;
-        if(CommitManager.commit_file_doesnt_exist()){
-            allCommits = new LinkedList<>();
-        }else{
-            allCommits = CommitManager.load_commit_file();
-        }
+        BranchManager.load_branch(BranchManager.load_which_branch_is_the_current());
+        LinkedList<Commit> allCommits = BranchManager.getCurrentBranch().getAllCommits();
 
         Button submitButton = new Button("Checkout this commit");
         submitButton.setDisable(true);
 
-        for(Commit commit:allCommits){
-            RadioButton radioButton = new RadioButton(commit.getMessage() );
+        for(Commit commit : allCommits){
+            RadioButton radioButton = new RadioButton(commit.getMessage());
             radioButton.setToggleGroup(toggleGroup);
             radioButton.setOnAction(e->submitButton.setDisable(false));
             vbox.getChildren().add(radioButton);
@@ -395,7 +393,7 @@ public class FXController {
             RadioButton selectedRadioButton = (RadioButton) toggleGroup.getSelectedToggle();
             if (selectedRadioButton != null) {
                 System.out.println("Selected Option: " + selectedRadioButton.getText());
-//                    BranchManager.checkout_commit();
+                BranchManager.checkout_commit(selectedRadioButton.getText());
             }
         });
 

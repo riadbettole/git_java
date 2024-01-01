@@ -13,14 +13,14 @@ public class Commit implements Serializable {
         this.message = message;
         this.commiter = commiter;
         this.hashedZippedCommitedStagingPath = hashedZippedCommitedStagingPath;
-        currentTime = LocalDateTime.now();
+        this.currentTime = LocalDateTime.now();
     }
 
     public String getMessage() {
         return message;
     }
 
-    public String getHashedZippedCommitedStagingPath() {
+    public String get_zipped_commited_stagingPath() {
         return hashedZippedCommitedStagingPath;
     }
 }

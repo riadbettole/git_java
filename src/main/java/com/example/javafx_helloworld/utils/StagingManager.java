@@ -17,24 +17,14 @@ public class StagingManager {
         return !file.exists();
     }
 
-    @SuppressWarnings("unchecked")
-    public static HashMap<String,HashedFile> load_staging_data(){
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(RepositoryManager.PathOfStagingFile))) {
-            return (HashMap<String,HashedFile>) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            return new HashMap<>();
-        }
-    }
-    private static void save_staging_data(HashMap<String, HashedFile> stagingData) {
-        try (ObjectOutputStream outStagingFile = new ObjectOutputStream(new FileOutputStream(RepositoryManager.PathOfStagingFile))) {
-            outStagingFile.writeObject(stagingData);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static void add_file_to_staging_data(HashedFile addedFile){
-        HashMap<String, HashedFile> stagingData = load_staging_data();
+        HashMap<String, HashedFile> stagingData;
+
+        if(StagingManager.staging_doesnt_exist()) {
+            stagingData = new HashMap<>();
+        }else {
+            stagingData = LoadingSavingManager.load_item(RepositoryManager.PathOfStagingFile);
+        }
 
         String zipPath = addedFile.get_zip_path();
         String wholePathForFile = addedFile.get_file_path();
@@ -43,14 +33,15 @@ public class StagingManager {
         addedFile.setState(FileStateEnums.ADDED);
         stagingData.put(wholePathForFile,addedFile);
 
-        save_staging_data(stagingData);
+        LoadingSavingManager.saveData(RepositoryManager.PathOfStagingFile, stagingData);
     }
+
     public static void delete_file_from_staging_data(HashedFile file){
-        HashMap<String, HashedFile> stagingData = load_staging_data();
+        HashMap<String, HashedFile> stagingData = LoadingSavingManager.load_item(RepositoryManager.PathOfStagingFile);
         String filepath = file.get_file_path();
         stagingData.remove(filepath);
 
-        save_staging_data(stagingData);
+        LoadingSavingManager.saveData(RepositoryManager.PathOfStagingFile, stagingData);
     }
     public static void restore_file_from_staging_data(HashedFile file) {
         String zipPath = file.get_zip_path();
@@ -64,6 +55,7 @@ public class StagingManager {
         return !hashedFile.get_hashed_name()
                 .equals( allPresentFiles.get(filePath).get_hashed_name() );
     }
+
     public static HashMap<FileStateEnums, ArrayList<HashedFile>> detect_changes_in_staging_data(){
         Map<String, HashedFile> allPresentFiles = FileManager.get_all_present_files();
         Map<String, HashedFile> stagingData;
@@ -71,7 +63,7 @@ public class StagingManager {
         if(StagingManager.staging_doesnt_exist()) {
             stagingData = new HashMap<>();
         }else {
-            stagingData = load_staging_data();
+            stagingData = LoadingSavingManager.load_item(RepositoryManager.PathOfStagingFile);
         }
 
         HashMap<FileStateEnums, ArrayList<HashedFile>> changes = new HashMap<>();
@@ -87,10 +79,12 @@ public class StagingManager {
 
             FileStateEnums state ;
 
-            if(file_is_modified(hashedFile, allPresentFiles))   state = FileStateEnums.MODIFIED;
-            else if(!hashedFile.isCommited())                   state = FileStateEnums.ADDED;
-            else                                                state = FileStateEnums.COMITED;
-
+            if(file_is_modified(hashedFile, allPresentFiles))
+                state = FileStateEnums.MODIFIED;
+            else if(!hashedFile.isCommited())
+                state = FileStateEnums.ADDED;
+            else
+                state = FileStateEnums.COMITED;
 
             hashedFile.setState(state);
             changes.computeIfAbsent(state, k -> new ArrayList<>()).add(hashedFile);
@@ -107,7 +101,7 @@ public class StagingManager {
     }
 
     public static void update_staged_files_to_commited(){
-        HashMap<String,HashedFile> stagingData = load_staging_data();
+        HashMap<String,HashedFile> stagingData = LoadingSavingManager.load_item(RepositoryManager.PathOfStagingFile);
 
         stagingData.forEach((pathStagedFile, stagedFile)->{
             if(stagingData.get(pathStagedFile).get_state() == FileStateEnums.ADDED){
@@ -115,7 +109,7 @@ public class StagingManager {
             }
         });
 
-        save_staging_data(stagingData);
+        LoadingSavingManager.saveData(RepositoryManager.PathOfStagingFile, stagingData);
     }
 }
 

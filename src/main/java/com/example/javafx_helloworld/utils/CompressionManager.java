@@ -26,14 +26,14 @@ public class CompressionManager {
             throw new RuntimeException(e);
         }
     }
-    public static void uncompress_file_content_into_its_place(String inputFileName, String outputFileName){
+    public static void uncompress_file_content_into_its_place(String fileToUnzip, String whereToUnzip){
 
-        create_file_directories_if_not_present(outputFileName);
+        create_file_directories_if_not_present(whereToUnzip);
 
-        try (FileInputStream in = new FileInputStream(inputFileName);
+        try (FileInputStream in = new FileInputStream(fileToUnzip);
              BufferedInputStream inBuffered = new BufferedInputStream(in);
              InflaterInputStream unzipped = new InflaterInputStream(inBuffered);
-             FileOutputStream out = new FileOutputStream(outputFileName);
+             FileOutputStream out = new FileOutputStream(whereToUnzip);
              BufferedOutputStream outBuffered = new BufferedOutputStream(out)) {
 
             byte[] buffer = new byte[1024];

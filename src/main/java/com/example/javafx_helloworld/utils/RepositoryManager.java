@@ -17,7 +17,8 @@ public class RepositoryManager {
     public static String PathOfIgnoreFile ;
     public static String PathOfZippedFolders ;
     public static String PathOfStagingFile ;
-    public static String PathOfCommitFile ;
+    public static String PathOfBranchFolder ;
+
 
     public static void set_directory_path(String _directoryPath) {
         directoryPath = _directoryPath;
@@ -25,7 +26,7 @@ public class RepositoryManager {
         PathOfIgnoreFile    = directoryPath + "/.gitignoreryad"         ;
         PathOfZippedFolders = directoryPath + "/.gitryad/ZippedFolders" ;
         PathOfStagingFile   = directoryPath + "/.gitryad/staging"       ;
-        PathOfCommitFile    = directoryPath + "/.gitryad/linkedCommits" ;
+        PathOfBranchFolder  = directoryPath + "/.gitryad/BranchFolder"  ;
     }
     public static String get_directory_path() { return directoryPath; }
 
@@ -55,6 +56,9 @@ public class RepositoryManager {
 
         if(recent_projects_file_doesnt_exist())
             create_recent_projects_file();
+
+        if(branch_folder_doesnt_exist())
+            create_branches_folder();
     }
 
     private static void create_repository_folder() {
@@ -79,15 +83,6 @@ public class RepositoryManager {
             throw new RuntimeException(e);
         }
     }
-    private static void create_folder_of_zipped_folders() {
-
-        Path path = Paths.get(PathOfZippedFolders);
-        try {
-            Files.createDirectories(path);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
     private static void create_recent_projects_file() {
 
         String userHome = System.getProperty("user.home");
@@ -102,13 +97,24 @@ public class RepositoryManager {
             throw new RuntimeException(e);
         }
     }
+    private static void create_folder_of_zipped_folders() {
 
-    private static boolean zipped_folder_doesnt_exist() {
-        String filePath = PathOfZippedFolders;
-        File file = new File(filePath);
-
-        return !file.exists();
+        Path path = Paths.get(PathOfZippedFolders);
+        try {
+            Files.createDirectories(path);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
+    private static void create_branches_folder(){
+        File f = new File(PathOfBranchFolder);
+        try{
+            Files.createDirectories(f.toPath());
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
+
     private static boolean recent_projects_file_doesnt_exist() {
 
         String userHome = System.getProperty("user.home");
@@ -118,6 +124,14 @@ public class RepositoryManager {
 
         return !Files.exists(filePath);
     }
+    private static boolean repository_doesnt_exist() {
+
+        String filePath = PathOfRepository;
+
+        File file = new File(filePath);
+
+        return !file.exists();
+    }
     private static boolean ignored_files_doesnt_exist() {
 
         String filePath = PathOfIgnoreFile;
@@ -126,12 +140,15 @@ public class RepositoryManager {
 
         return !file.exists();
     }
-    private static boolean repository_doesnt_exist() {
-
-        String filePath = PathOfRepository;
-
+    private static boolean zipped_folder_doesnt_exist() {
+        String filePath = PathOfZippedFolders;
         File file = new File(filePath);
 
+        return !file.exists();
+    }
+    private static boolean branch_folder_doesnt_exist() {
+        String filePath = PathOfBranchFolder;
+        File file = new File(filePath);
         return !file.exists();
     }
 
