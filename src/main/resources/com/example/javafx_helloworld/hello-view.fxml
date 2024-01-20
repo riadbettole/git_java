@@ -18,6 +18,7 @@
         <Button fx:id="openFolderButton" onAction="#open_folder" text="Open current folder" visible="false"/>
     </HBox>
     <Text  fx:id="textNameProject" text="RECENT PROJECTS"/>
+    <Text  fx:id="currentBranch" text=" "/>
     <VBox fx:id="recentProjectsContainer"/>
 
 
@@ -26,11 +27,17 @@
     </VBox>
 
     <HBox spacing="10.0">
+        <Button fx:id="checkoutButton" onAction="#see_all_commits_in_order_button" text="Commits" visible="false"/>
+        <Button fx:id="branchWindowButton" onAction="#branch_window_button" text="Checkout Branches" visible="false"/>
+    </HBox>
+
+    <HBox spacing="10.0">
         <Button fx:id="commitButton" text="Commit" onAction="#commit_this_staging" visible="false"/>
         <Button fx:id="compareFilesButton" text="Compare two files" onAction="#compare_two_files" visible="false" />
         <Button fx:id="deleteRepoButton" text="Delete this repo" onAction="#delete_this_repo" visible="false"/>
     </HBox>
 
-    <Button fx:id="checkoutButton" onAction="#see_all_commits_in_order_button" text="Checkout commits" visible="false"/>
+
+
 
 </VBox>

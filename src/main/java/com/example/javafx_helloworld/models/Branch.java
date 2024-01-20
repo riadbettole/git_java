@@ -1,7 +1,5 @@
 package com.example.javafx_helloworld.models;
 
-import com.example.javafx_helloworld.models.Commit;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
@@ -20,8 +18,12 @@ public class Branch implements Serializable {
     public String getName() {
         return name;
     }
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public LinkedList<Commit> getAllCommits() {
         return allCommits;
     }
+
 }

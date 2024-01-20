@@ -28,8 +28,10 @@ public class FXController {
     @FXML private Button deleteRepoButton;
     @FXML private Button recheckFilesButton;
     @FXML private Button openFolderButton;
+    @FXML private Button branchWindowButton;
 
     @FXML private Text textNameProject;
+    @FXML private Text currentBranch;
     private String directoryPath;
 
     @FXML private VBox currentFilesCheckBoxContainer;
@@ -38,7 +40,6 @@ public class FXController {
 
     CustomStack<String> recentProjects;
 
-//    CustomCheckBox<HashedFile>[] customHashedFilesCheckBoxes;
     ArrayList<CustomCheckBox<HashedFile>> customHashedFilesCheckBoxes;
 
     Button stageUnstageButton;
@@ -52,11 +53,13 @@ public class FXController {
         recheckFilesButton.setVisible(true);
         openFolderButton  .setVisible(true);
         checkoutButton    .setVisible(true);
+        branchWindowButton.setVisible(true);
     }
     @FXML private void open_project() {
         RepositoryManager.select_folder_of_project();
         directoryPath = RepositoryManager.get_directory_path();
 
+        BranchManager.set_and_load_current_branch();
         textNameProject.setText("RECENT PROJECTS : current is " + directoryPath);
         recentProjects.push(directoryPath);
         update_recent_project_order();
@@ -81,9 +84,10 @@ public class FXController {
         RepositoryManager.set_directory_path(directoryPath);
         RepositoryManager.files_and_folders_exist();
 
+        BranchManager.set_and_load_current_branch();
+
         recentProjects.push(directoryPath);
         update_recent_project_order();
-        //RepositoryManager.set_directory_path(directoryPath);
 
         if (directoryPath == null || directoryPath.isEmpty()) {
             return;
@@ -113,10 +117,9 @@ public class FXController {
         resultStage.show();
     }
     private void update_state_of_project() {
-
+        currentBranch.setText("Branch : " + BranchManager.getCurrentBranch().getName());
         FileManager.clear_current_state_of_project();
         FileManager.get_all_present_files_in_directory(directoryPath);
-        System.out.println(RepositoryManager.PathOfStagingFile);
         show_the_state_of_the_project();
     }
 
@@ -325,10 +328,6 @@ public class FXController {
         button.setOnAction(e->
         {
             String userInput = textArea.getText();
-
-            if(BranchManager.currentBranch == null){
-                BranchManager.currentBranch = new Branch("Master");
-            }
             BranchManager.add_new_commit(userInput);
 
             recheck_the_state();
@@ -368,6 +367,7 @@ public class FXController {
         warningStage.setScene(warningScene);
         warningStage.show();
     }
+
     @FXML private void see_all_commits_in_order_button() {
         Stage warningStage = new Stage();
         warningStage.setTitle("COMMITS OF THIS BRANCH");
@@ -383,17 +383,17 @@ public class FXController {
         submitButton.setDisable(true);
 
         for(Commit commit : allCommits){
-            RadioButton radioButton = new RadioButton(commit.getMessage());
+            CustomRadioButton<Commit> radioButton = new CustomRadioButton<>(commit, commit.getMessage(), "black");
             radioButton.setToggleGroup(toggleGroup);
             radioButton.setOnAction(e->submitButton.setDisable(false));
             vbox.getChildren().add(radioButton);
         }
 
         submitButton.setOnAction(e -> {
-            RadioButton selectedRadioButton = (RadioButton) toggleGroup.getSelectedToggle();
+            @SuppressWarnings("unchecked")
+            CustomRadioButton<Commit> selectedRadioButton = (CustomRadioButton<Commit>) toggleGroup.getSelectedToggle();
             if (selectedRadioButton != null) {
-                System.out.println("Selected Option: " + selectedRadioButton.getText());
-                BranchManager.checkout_commit(selectedRadioButton.getText());
+                BranchManager.checkout_commit(selectedRadioButton.get_item());
             }
         });
 
@@ -403,7 +403,117 @@ public class FXController {
         warningStage.setScene(warningScene);
         warningStage.show();
     }
+    @FXML private void branch_window_button() {
+        Stage branchStage = new Stage();
+        branchStage.setTitle("Branches of this project");
 
+        VBox vbox = new VBox();
+
+        ToggleGroup toggleGroup = new ToggleGroup();
+
+        BranchManager.load_branch(BranchManager.load_which_branch_is_the_current());
+        List<Branch> allBranches = BranchManager.get_all_available_branches();
+
+        Button checkoutBranchButton = new Button("Checkout this branch");
+        Button createBranchButton = new Button("New branch");
+        Button deleteBranchButton = new Button("Delete branch");
+
+        checkoutBranchButton.setDisable(true);
+
+        for(Branch branch : allBranches){
+            CustomRadioButton<Branch> radioButton = new CustomRadioButton<>(branch, branch.getName(), "black");
+            radioButton.setToggleGroup(toggleGroup);
+            radioButton.setOnAction(e->checkoutBranchButton.setDisable(false));
+            vbox.getChildren().add(radioButton);
+        }
+
+        checkoutBranchButton.setOnAction(e -> {
+            @SuppressWarnings("unchecked")
+            CustomRadioButton<Branch> selectedRadioButton = (CustomRadioButton<Branch>) toggleGroup.getSelectedToggle();
+            if (selectedRadioButton != null) {
+                Branch branch = selectedRadioButton.get_item();
+                BranchManager.load_branch(branch.getName());
+                currentBranch.setText("Branch : " + branch.getName());
+                branchStage.close();
+            }
+        });
+
+        createBranchButton.setOnAction(e -> {
+            handle_create_branch_window();
+        });
+
+        deleteBranchButton.setOnAction(e -> {
+            @SuppressWarnings("unchecked")
+            CustomRadioButton<Branch> selectedRadioButton = (CustomRadioButton<Branch>) toggleGroup.getSelectedToggle();
+            String nameBranch = selectedRadioButton.get_item().getName();
+            if(BranchManager.getCurrentBranch().getName().equals(nameBranch)){
+                warning_window("Cant delete current branch");
+                return;
+            }
+            BranchManager.delete_branch(nameBranch);
+            branchStage.close();
+            branch_window_button();
+        });
+
+        HBox hbox = new HBox();
+        hbox.getChildren().add(checkoutBranchButton);
+        hbox.getChildren().add(createBranchButton);
+        hbox.getChildren().add(deleteBranchButton);
+
+        vbox.getChildren().add(hbox);
+
+        Scene warningScene = new Scene(vbox,300,200);
+        branchStage.setScene(warningScene);
+        branchStage.show();
+    }
+    private void handle_create_branch_window(){
+        Stage addBranchStage = new Stage();
+        addBranchStage.setTitle("ADD BRANCH WINDOW");
+
+        VBox vbox = new VBox();
+        vbox.setAlignment(Pos.CENTER);
+
+        Text text = new Text("NAME OF BRANCH");
+        TextArea textArea = new TextArea();
+
+        Button button = new Button("Add");
+        button.setOnAction(e-> {
+            String userInput = textArea.getText();
+            if(BranchManager.branch_exist(userInput)){
+                warning_window("Branch already exists");
+                return;
+            }
+            BranchManager.add_or_save_branch(userInput);
+            BranchManager.load_branch(userInput);
+
+            recheck_the_state();
+            addBranchStage.close();
+        });
+
+        vbox.getChildren().add(text);
+        vbox.getChildren().add(textArea);
+        vbox.getChildren().add(button);
+
+        Scene addBranchScene = new Scene(vbox,300,200);
+
+        addBranchStage.setScene(addBranchScene);
+        addBranchStage.show();
+    }
+    private void warning_window(String text){
+        Stage w = new Stage();
+        w.setTitle("WARNING WINDOW");
+
+        VBox y = new VBox();
+        y.setAlignment(Pos.CENTER);
+        Scene x = new Scene(y,300,200);
+        Text t = new Text(text);
+        Button b = new Button("Ok");
+        b.setOnAction(ev -> w.close());
+        y.getChildren().add(t);
+        y.getChildren().add(b);
+        w.setScene(x);
+        w.show();
+    }
 
     private TextFlow changesLinesTextFlow;
     @FXML private void compare_two_files(){
