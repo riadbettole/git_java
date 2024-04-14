@@ -438,9 +438,9 @@ public class FXController {
             }
         });
 
-        createBranchButton.setOnAction(e -> {
-            handle_create_branch_window();
-        });
+        createBranchButton.setOnAction(e ->
+            handle_create_branch_window()
+        );
 
         deleteBranchButton.setOnAction(e -> {
             @SuppressWarnings("unchecked")

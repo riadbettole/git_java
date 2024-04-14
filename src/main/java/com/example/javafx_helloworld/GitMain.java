@@ -1,7 +1,6 @@
 package com.example.javafx_helloworld;
 
 import com.example.javafx_helloworld.controllers.FXController;
-import com.example.javafx_helloworld.utils.BranchManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
