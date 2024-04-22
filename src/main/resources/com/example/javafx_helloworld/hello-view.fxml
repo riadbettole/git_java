@@ -13,9 +13,9 @@
     </padding>
 
     <HBox spacing="20.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1">
-        <Button onAction="#open_project" text="Open Project" />
-        <Button fx:id="recheckFilesButton" onAction="#recheck_the_state" text="Check Changes" visible="false"/>
-        <Button fx:id="openFolderButton" onAction="#open_folder" text="Open current folder" visible="false"/>
+        <Button onAction="#openProject" text="Open Project" />
+        <Button fx:id="recheckFilesButton" onAction="#recheckTheState" text="Check Changes" visible="false"/>
+        <Button fx:id="openFolderButton" onAction="#openFolder" text="Open current folder" visible="false"/>
     </HBox>
     <Text  fx:id="textNameProject" text="RECENT PROJECTS"/>
     <Text  fx:id="currentBranch" text=" "/>
@@ -27,14 +27,14 @@
     </VBox>
 
     <HBox spacing="10.0">
-        <Button fx:id="checkoutButton" onAction="#see_all_commits_in_order_button" text="Commits" visible="false"/>
-        <Button fx:id="branchWindowButton" onAction="#branch_window_button" text="Checkout Branches" visible="false"/>
+        <Button fx:id="checkoutButton" onAction="#seeAllCommitsInOrderButton" text="Commits" visible="false"/>
+        <Button fx:id="branchWindowButton" onAction="#branchWindowButton" text="Checkout Branches" visible="false"/>
     </HBox>
 
     <HBox spacing="10.0">
-        <Button fx:id="commitButton" text="Commit" onAction="#commit_this_staging" visible="false"/>
-        <Button fx:id="compareFilesButton" text="Compare two files" onAction="#compare_two_files" visible="false" />
-        <Button fx:id="deleteRepoButton" text="Delete this repo" onAction="#delete_this_repo" visible="false"/>
+        <Button fx:id="commitButton" text="Commit" onAction="#commitThisStaging" visible="false"/>
+        <Button fx:id="compareFilesButton" text="Compare two files" onAction="#compareTwoFiles" visible="false" />
+        <Button fx:id="deleteRepoButton" text="Delete this repo" onAction="#deleteThisRepo" visible="false"/>
     </HBox>
 
 

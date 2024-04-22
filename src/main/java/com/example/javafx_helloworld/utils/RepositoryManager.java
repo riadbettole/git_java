@@ -16,52 +16,53 @@ public class RepositoryManager {
     public static String PathOfRepository ;
     public static String PathOfIgnoreFile ;
     public static String PathOfZippedFolders ;
-    public static String PathOfStagingFile ;
+    public static String PathOfStagingAreaFile;
     public static String PathOfBranchFolder ;
 
 
-    public static void set_directory_path(String _directoryPath) {
+    public static void setDirectoryPath(String _directoryPath) {
         directoryPath = _directoryPath;
         PathOfRepository    = directoryPath + "/.gitryad"               ;
         PathOfIgnoreFile    = directoryPath + "/.gitignoreryad"         ;
         PathOfZippedFolders = directoryPath + "/.gitryad/ZippedFolders" ;
-        PathOfStagingFile   = directoryPath + "/.gitryad/staging"       ;
+        PathOfStagingAreaFile = directoryPath + "/.gitryad/staging"       ;
         PathOfBranchFolder  = directoryPath + "/.gitryad/BranchFolder"  ;
     }
-    public static String get_directory_path() { return directoryPath; }
+    public static String getDirectoryPath() { return directoryPath; }
 
-    public static void select_folder_of_project() {
+    public static void selectFolderOfRepository() {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Select Directory");
 
         directoryChooser.setInitialDirectory(new File("."));
         File selectedDirectory = directoryChooser.showDialog(null);
 
-        if (selectedDirectory == null)
+        if (selectedDirectory == null) {
             return;
+        }
 
-        set_directory_path(selectedDirectory.getAbsolutePath());
-        files_and_folders_exist();
+        setDirectoryPath(selectedDirectory.getAbsolutePath());
+        initializeRepositoryFoldersAndFiles();
 
     }
-    public static void files_and_folders_exist(){
-        if (repository_doesnt_exist())
-            create_repository_folder();
+    public static void initializeRepositoryFoldersAndFiles(){
+        if (repositoryDoesntExist())
+            initializeRepositoryFolder();
 
-        if (ignored_files_doesnt_exist())
-            create_ignore_file();
+        if (ignoredFilesDoesntExist())
+            initializeIgnoreFile();
 
-        if (zipped_folder_doesnt_exist())
-            create_folder_of_zipped_folders();
+        if (zippedFolderDoesntExist())
+            initializeFolderOfZippedFolders();
 
-        if(recent_projects_file_doesnt_exist())
-            create_recent_projects_file();
+        if(recentProjectsFileDoesntExist())
+            initializeRecentProjectsFile();
 
-        if(branch_folder_doesnt_exist())
-            create_branches_folder();
+        if(branchFolderDoesntExist())
+            initializeBranchesFolder();
     }
 
-    private static void create_repository_folder() {
+    private static void initializeRepositoryFolder() {
         Path path = Paths.get(PathOfRepository);
         try {
             Files.createDirectories(path);
@@ -70,7 +71,7 @@ public class RepositoryManager {
             throw new RuntimeException(e);
         }
     }
-    private static void create_ignore_file() {
+    private static void initializeIgnoreFile() {
 
         Path path = Paths.get(PathOfIgnoreFile);
         try {
@@ -83,7 +84,7 @@ public class RepositoryManager {
             throw new RuntimeException(e);
         }
     }
-    private static void create_recent_projects_file() {
+    private static void initializeRecentProjectsFile() {
 
         String userHome = System.getProperty("user.home");
         String relativePath = "Documents";
@@ -97,7 +98,7 @@ public class RepositoryManager {
             throw new RuntimeException(e);
         }
     }
-    private static void create_folder_of_zipped_folders() {
+    private static void initializeFolderOfZippedFolders() {
 
         Path path = Paths.get(PathOfZippedFolders);
         try {
@@ -106,7 +107,7 @@ public class RepositoryManager {
             throw new RuntimeException(e);
         }
     }
-    private static void create_branches_folder(){
+    private static void initializeBranchesFolder(){
         File f = new File(PathOfBranchFolder);
         try{
             Files.createDirectories(f.toPath());
@@ -115,7 +116,7 @@ public class RepositoryManager {
         }
     }
 
-    private static boolean recent_projects_file_doesnt_exist() {
+    private static boolean recentProjectsFileDoesntExist() {
 
         String userHome = System.getProperty("user.home");
         String relativePath = "Documents";
@@ -124,7 +125,7 @@ public class RepositoryManager {
 
         return !Files.exists(filePath);
     }
-    private static boolean repository_doesnt_exist() {
+    private static boolean repositoryDoesntExist() {
 
         String filePath = PathOfRepository;
 
@@ -132,7 +133,7 @@ public class RepositoryManager {
 
         return !file.exists();
     }
-    private static boolean ignored_files_doesnt_exist() {
+    private static boolean ignoredFilesDoesntExist() {
 
         String filePath = PathOfIgnoreFile;
 
@@ -140,19 +141,19 @@ public class RepositoryManager {
 
         return !file.exists();
     }
-    private static boolean zipped_folder_doesnt_exist() {
+    private static boolean zippedFolderDoesntExist() {
         String filePath = PathOfZippedFolders;
         File file = new File(filePath);
 
         return !file.exists();
     }
-    private static boolean branch_folder_doesnt_exist() {
+    private static boolean branchFolderDoesntExist() {
         String filePath = PathOfBranchFolder;
         File file = new File(filePath);
         return !file.exists();
     }
 
-    public static boolean repository_doesnt_exist_at_this_path(String directoryPath) {
+    public static boolean repositoryDoesntExistAtThisPath(String directoryPath) {
         String filePath = directoryPath + "/.gitryad";
 
         File file = new File(filePath);
@@ -160,26 +161,26 @@ public class RepositoryManager {
         return !file.exists();
     }
 
-    public static void delete_this_repo() {
+    public static void deleteThisRepository() {
         File current_directory = new File(PathOfRepository);
         try{
-        delete_directory(current_directory);
-        Files.deleteIfExists(Paths.get(PathOfRepository));
-        Files.deleteIfExists(Paths.get(PathOfIgnoreFile));
+            deleteDirectory(current_directory);
+            Files.deleteIfExists(Paths.get(PathOfRepository));
+            Files.deleteIfExists(Paths.get(PathOfIgnoreFile));
         }catch( IOException e){
             throw new RuntimeException(e);
         }
     }
-    private static void delete_directory(File current_directory) {
-
+    private static void deleteDirectory(File current_directory) {
         File [] files = current_directory.listFiles();
         assert files != null;
         for (File subfile : files) {
             if (subfile.isDirectory()) {
-                delete_directory(subfile);
+                deleteDirectory(subfile);
             }
-
-            if(subfile.delete()) return;
+            if(subfile.delete()) {
+                return;
+            }
         }
     }
 

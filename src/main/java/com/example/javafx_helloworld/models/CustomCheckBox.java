@@ -8,14 +8,14 @@ public class CustomCheckBox<T> extends CheckBox {
     public CustomCheckBox(T item,String text, String color) {
         super(text);
         this.item = item;
-        update_style(color);
+        updateStyle(color);
     }
 
-    public T get_item() {
+    public T getItem() {
         return item;
     }
 
-    public void update_style(String color) {
+    public void updateStyle(String color) {
         setStyle("-fx-text-fill: "+color+";");
     }
 }

@@ -16,20 +16,20 @@ public class ComparatorManager {
     static Map<String, Integer> oldFileMap = new HashMap<>();
     static Map<String, Integer> newFileMap = new HashMap<>();
 
-    public static void set_old_file_path(String _o){
+    public static void setOldFilePath(String _o){
         oldFilePath = _o;
     }
 
-    public static void set_new_file_path(String _n){
+    public static void setNewFilePath(String _n){
         newFilePath = _n;
     }
 
-    public static void to_map_files(){
-            oldFileMap = process_file(oldFilePath);
-            newFileMap = process_file(newFilePath);
+    public static void toMapFiles(){
+            oldFileMap = processFile(oldFilePath);
+            newFileMap = processFile(newFilePath);
     }
 
-    private static Map<String, Integer> process_file(String filePath){
+    private static Map<String, Integer> processFile(String filePath){
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath)) ) {
             String line = reader.readLine();
             int index = 1;
@@ -49,16 +49,16 @@ public class ComparatorManager {
     }
 
 
-    private static final ArrayList<LineChanges> currentLinesChanges = new ArrayList<>();
+    private static final ArrayList<LineChanges> CURRENT_LINES_CHANGES = new ArrayList<>();
 
     public static void compare( ){
-        currentLinesChanges.clear();
+        CURRENT_LINES_CHANGES.clear();
 
         oldFileMap.forEach((line, index)->{
             boolean isLineDeletedFromNewFile = !newFileMap.containsKey(line);
             if(isLineDeletedFromNewFile){
                 LineChanges change = new LineChanges(line, LineState.DELETED, index);
-                currentLinesChanges.add(change);
+                CURRENT_LINES_CHANGES.add(change);
             }
         });
 
@@ -71,12 +71,12 @@ public class ComparatorManager {
             } else{
                 change = new LineChanges(line, LineState.PREVIOUS, index);
             }
-            currentLinesChanges.add(change);
+            CURRENT_LINES_CHANGES.add(change);
         });
     }
 
     public static ArrayList<LineChanges> get_current_changes_lines() {
-        return currentLinesChanges;
+        return CURRENT_LINES_CHANGES;
     }
 }
 

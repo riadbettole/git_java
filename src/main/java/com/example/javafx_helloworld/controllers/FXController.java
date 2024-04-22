@@ -46,7 +46,7 @@ public class FXController {
     Button restoreButton;
     Button restageButton;
 
-    private void show_buttons() {
+    private void showButtons() {
         compareFilesButton.setVisible(true);
         commitButton      .setVisible(true);
         deleteRepoButton  .setVisible(true);
@@ -55,58 +55,58 @@ public class FXController {
         checkoutButton    .setVisible(true);
         branchWindowButton.setVisible(true);
     }
-    @FXML private void open_project() {
-        RepositoryManager.select_folder_of_project();
-        directoryPath = RepositoryManager.get_directory_path();
+    @FXML private void openProject() {
+        RepositoryManager.selectFolderOfRepository();
+        directoryPath = RepositoryManager.getDirectoryPath();
 
-        BranchManager.set_and_load_current_branch();
+        BranchManager.setAndLoadCurrentBranch();
         textNameProject.setText("RECENT PROJECTS : current is " + directoryPath);
         recentProjects.push(directoryPath);
-        update_recent_project_order();
+        updateRecentProjectOrder();
 
         if (directoryPath == null || directoryPath.isEmpty()) {
             return;
         }
 
-        show_buttons();
+        showButtons();
 
-        show_recent_projects();
-        update_state_of_project();
+        showRecentProjects();
+        updateStateOfProject();
     }
-    @FXML private void open_project_recent_project(String _directoryPath) {
-        if (RepositoryManager.repository_doesnt_exist_at_this_path(_directoryPath)) {
-            warning_project_not_found();
+    @FXML private void openProjectRecentProject(String _directoryPath) {
+        if (RepositoryManager.repositoryDoesntExistAtThisPath(_directoryPath)) {
+            warningProjectNotFound();
             return;
         }
         directoryPath = _directoryPath;
         textNameProject.setText("RECENT PROJECTS : current is " + directoryPath);
 
-        RepositoryManager.set_directory_path(directoryPath);
-        RepositoryManager.files_and_folders_exist();
+        RepositoryManager.setDirectoryPath(directoryPath);
+        RepositoryManager.initializeRepositoryFoldersAndFiles();
 
-        BranchManager.set_and_load_current_branch();
+        BranchManager.setAndLoadCurrentBranch();
 
         recentProjects.push(directoryPath);
-        update_recent_project_order();
+        updateRecentProjectOrder();
 
         if (directoryPath == null || directoryPath.isEmpty()) {
             return;
         }
 
-        show_buttons();
+        showButtons();
 
-        show_recent_projects();
-        update_state_of_project();
+        showRecentProjects();
+        updateStateOfProject();
     }
-    @FXML private void recheck_the_state() {
-        if (RepositoryManager.repository_doesnt_exist_at_this_path(directoryPath)) {
-            warning_project_not_found();
+    @FXML private void recheckTheState() {
+        if (RepositoryManager.repositoryDoesntExistAtThisPath(directoryPath)) {
+            warningProjectNotFound();
             return;
         }
-        update_state_of_project();
+        updateStateOfProject();
     }
 
-    private void warning_project_not_found(){
+    private void warningProjectNotFound(){
         Stage resultStage = new Stage();
         resultStage.setTitle("Project Not Found");
         Text text = new Text("Project is not found in this path");
@@ -116,14 +116,14 @@ public class FXController {
         resultStage.setScene(resultScene);
         resultStage.show();
     }
-    private void update_state_of_project() {
+    private void updateStateOfProject() {
         currentBranch.setText("Branch : " + BranchManager.getCurrentBranch().getName());
-        FileManager.clear_current_state_of_project();
-        FileManager.get_all_present_files_in_directory(directoryPath);
-        show_the_state_of_the_project();
+        FileManager.clearCurrentStateOfProject();
+        FileManager.detectAllPresentFilesInThisDirectory(directoryPath);
+        showTheStateOfTheProject();
     }
 
-    private int size_of_custom_check_boxes(Map<FileStateEnums, ArrayList<HashedFile>> map){
+    private int sizeOfCustomCheckBoxes(Map<FileStateEnums, ArrayList<HashedFile>> map){
         int num = 0;
         if(map.containsKey(FileStateEnums.UNADDED )) num += map.get(FileStateEnums.UNADDED ).size();
         if(map.containsKey(FileStateEnums.ADDED   )) num += map.get(FileStateEnums.ADDED   ).size();
@@ -131,7 +131,7 @@ public class FXController {
         if(map.containsKey(FileStateEnums.DELETED )) num += map.get(FileStateEnums.DELETED ).size();
         return num;
     }
-    private void insert_state_title(FileStateEnums state){
+    private void insertStateTitle(FileStateEnums state){
         Text text = new Text();
         switch (state) {
             case ADDED -> text.setText("STAGED" + ": (select to unstage)\n");
@@ -141,26 +141,26 @@ public class FXController {
         }
         currentFilesCheckBoxContainer.getChildren().add(text);
     }
-    private void insert_staging_buttons(){
+    private void insertStagingButtons(){
         stageUnstageButton = new Button("Stage/ Unstage");
         restoreButton= new Button("Restore");
         restageButton = new Button("Restage");
 
-        stageUnstageButton.setOnAction(e -> stage_or_unstage_file());
-        restoreButton.setOnAction(e -> restore_modified_or_deleted_file());
-        restageButton.setOnAction(e -> restage_modified_file());
+        stageUnstageButton.setOnAction(e -> stageOrUnstageFile());
+        restoreButton.setOnAction(e -> restoreModifiedOrDeletedFile());
+        restageButton.setOnAction(e -> restageModifiedFile());
 
         executeButtonContainer.getChildren().clear();
         executeButtonContainer.getChildren().add(stageUnstageButton);
         executeButtonContainer.getChildren().add(restoreButton);
         executeButtonContainer.getChildren().add(restageButton);
     }
-    private void show_the_state_of_the_project() {
+    private void showTheStateOfTheProject() {
         Map<FileStateEnums, ArrayList<HashedFile>> allChangesInThisDirectory;
         currentFilesCheckBoxContainer.getChildren().clear();
 
-        allChangesInThisDirectory = StagingManager.detect_changes_in_staging_data();
-        int numberOfCheckBoxes = size_of_custom_check_boxes(allChangesInThisDirectory);
+        allChangesInThisDirectory = StagingManager.detectChangesInStagingData();
+        int numberOfCheckBoxes = sizeOfCustomCheckBoxes(allChangesInThisDirectory);
 
         if(numberOfCheckBoxes == 0){
             Text text = new Text("Empty Folder add something!");
@@ -176,7 +176,7 @@ public class FXController {
             if (!allChangesInThisDirectory.containsKey(state)) continue;
 
             ArrayList<HashedFile> arrayOfPaths = allChangesInThisDirectory.get(state);
-            insert_state_title(state);
+            insertStateTitle(state);
 
             String color = switch (state){
                 case ADDED   -> "green";
@@ -186,20 +186,20 @@ public class FXController {
 
             for (HashedFile hashedFile : arrayOfPaths) {
                 CustomCheckBox<HashedFile> hashedFileToAdd = new CustomCheckBox<>(hashedFile, hashedFile.get_file_path(), color);
-                hashedFileToAdd.setOnAction(event -> check_if_button_should_be_enabled_or_not(customHashedFilesCheckBoxes));
+                hashedFileToAdd.setOnAction(event -> checkIfButtonShouldBeEnabledOrNot(customHashedFilesCheckBoxes));
                 customHashedFilesCheckBoxes.add(hashedFileToAdd);
                 currentFilesCheckBoxContainer.getChildren().add(hashedFileToAdd);
             }
         }
-        insert_staging_buttons();
+        insertStagingButtons();
         currentFilesCheckBoxContainer.getChildren().add(executeButtonContainer);
     }
 
-    private void check_if_button_should_be_enabled_or_not(ArrayList<CustomCheckBox<HashedFile>> checkBoxes) {
+    private void checkIfButtonShouldBeEnabledOrNot(ArrayList<CustomCheckBox<HashedFile>> checkBoxes) {
         Set<FileStateEnums> checked = new HashSet<>();
         for (CustomCheckBox<HashedFile> checkBox : checkBoxes) {
             if (checkBox.isSelected()) {
-                checked.add(checkBox.get_item().get_state());
+                checked.add(checkBox.getItem().get_state());
             }
         }
         if (checked.isEmpty()) {
@@ -216,26 +216,26 @@ public class FXController {
             }
         });
     }
-    private void stage_or_unstage_file() {
+    private void stageOrUnstageFile() {
 
         for (CustomCheckBox<HashedFile> customCheckBox : customHashedFilesCheckBoxes) {
             if (customCheckBox.isSelected()) {
-                HashedFile hashedFile = customCheckBox.get_item();
+                HashedFile hashedFile = customCheckBox.getItem();
                 switch (hashedFile.get_state()) {
-                    case UNADDED -> StagingManager.add_file_to_staging_data(hashedFile);
-                    case ADDED -> StagingManager.delete_file_from_staging_data(hashedFile);
+                    case UNADDED -> StagingManager.addFileToStagingArea(hashedFile);
+                    case ADDED -> StagingManager.removeFromStagingArea(hashedFile);
                 }
             }
         }
-        recheck_the_state();
+        recheckTheState();
     }
-    private void restore_modified_or_deleted_file() {
+    private void restoreModifiedOrDeletedFile() {
 
         for (CustomCheckBox<HashedFile> customCheckBox : customHashedFilesCheckBoxes) {
             if (customCheckBox.isSelected()) {
-                HashedFile hashedFile = customCheckBox.get_item();
+                HashedFile hashedFile = customCheckBox.getItem();
                 switch (hashedFile.get_state()) {
-                    case DELETED, MODIFIED -> StagingManager.restore_file_from_staging_data(hashedFile);
+                    case DELETED, MODIFIED -> StagingManager.restoreFileFromStagingData(hashedFile);
                 }
 
                 System.out.println(hashedFile.get_file_path());
@@ -243,14 +243,14 @@ public class FXController {
         }
         restoreButton.setDisable(false);
         restageButton.setDisable(false);
-        recheck_the_state();
+        recheckTheState();
     }
-    private void restage_modified_file() {
+    private void restageModifiedFile() {
         for (CustomCheckBox<HashedFile> customCheckBox : customHashedFilesCheckBoxes) {
             if (customCheckBox.isSelected()) {
-                HashedFile hashedFile = customCheckBox.get_item();
+                HashedFile hashedFile = customCheckBox.getItem();
                 if (hashedFile.get_state() == FileStateEnums.MODIFIED) {
-                    StagingManager.add_file_to_staging_data(hashedFile);
+                    StagingManager.addFileToStagingArea(hashedFile);
                 }
 
                 System.out.println(hashedFile.get_file_path());
@@ -258,11 +258,11 @@ public class FXController {
         }
         restoreButton.setDisable(false);
         restageButton.setDisable(false);
-        recheck_the_state();
+        recheckTheState();
     }
 
     @SuppressWarnings("unchecked")
-    private void load_recent_project_order(){
+    private void loadRecentProjectOrder(){
         String userHome = System.getProperty("user.home");
         String relativePath = "Documents";
         Path documentsPath = Paths.get(userHome, relativePath);
@@ -275,7 +275,7 @@ public class FXController {
             recentProjects = new CustomStack<>();
         }
     }
-    private void update_recent_project_order(){
+    private void updateRecentProjectOrder(){
 
         String userHome = System.getProperty("user.home");
         String relativePath = "Documents";
@@ -287,8 +287,8 @@ public class FXController {
             throw new RuntimeException(e);
         }
     }
-    public void show_recent_projects(){
-        load_recent_project_order();
+    public void showRecentProjects(){
+        loadRecentProjectOrder();
         recentProjectsContainer.getChildren().clear();
 
         CustomStack<String> reverseString = new CustomStack<>(recentProjects);
@@ -299,13 +299,13 @@ public class FXController {
             Hyperlink hyperlink = new Hyperlink(path);
             hyperlink.setOnAction(event -> {
                 String hyperlinkText = hyperlink.getText();
-                open_project_recent_project(hyperlinkText);
+                openProjectRecentProject(hyperlinkText);
             });
             recentProjectsContainer.getChildren().add(hyperlink);
         }
     }
 
-    @FXML private void open_folder() {
+    @FXML private void openFolder() {
         System.out.println(directoryPath);
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("explorer.exe", directoryPath);
@@ -314,7 +314,7 @@ public class FXController {
             throw new RuntimeException(e);
         }
     }
-    @FXML private void commit_this_staging(){
+    @FXML private void commitThisStaging(){
         Stage commitStage = new Stage();
         commitStage.setTitle("COMMIT WINDOW");
 
@@ -328,9 +328,9 @@ public class FXController {
         button.setOnAction(e->
         {
             String userInput = textArea.getText();
-            BranchManager.add_new_commit(userInput);
+            BranchManager.addNewCommit(userInput);
 
-            recheck_the_state();
+            recheckTheState();
             commitStage.close();
         });
 
@@ -343,7 +343,7 @@ public class FXController {
         commitStage.setScene(warningScene);
         commitStage.show();
     }
-    @FXML private void delete_this_repo(){
+    @FXML private void deleteThisRepo(){
         Stage warningStage = new Stage();
         warningStage.setTitle("WARNING DELETE");
 
@@ -354,7 +354,7 @@ public class FXController {
         Button button = new Button("Confirm");
         button.setOnAction(e->
         {
-            RepositoryManager.delete_this_repo();
+            RepositoryManager.deleteThisRepository();
             currentFilesCheckBoxContainer.getChildren().clear();
             textNameProject.setText("RECENT PROJECTS :");
             warningStage.close();
@@ -368,7 +368,7 @@ public class FXController {
         warningStage.show();
     }
 
-    @FXML private void see_all_commits_in_order_button() {
+    @FXML private void seeAllCommitsInOrderButton() {
         Stage warningStage = new Stage();
         warningStage.setTitle("COMMITS OF THIS BRANCH");
 
@@ -376,7 +376,7 @@ public class FXController {
 
         ToggleGroup toggleGroup = new ToggleGroup();
 
-        BranchManager.load_branch(BranchManager.load_which_branch_is_the_current());
+        BranchManager.loadBranch(BranchManager.loadWhichBranchIsTheCurrent());
         LinkedList<Commit> allCommits = BranchManager.getCurrentBranch().getAllCommits();
 
         Button submitButton = new Button("Checkout this commit");
@@ -393,7 +393,7 @@ public class FXController {
             @SuppressWarnings("unchecked")
             CustomRadioButton<Commit> selectedRadioButton = (CustomRadioButton<Commit>) toggleGroup.getSelectedToggle();
             if (selectedRadioButton != null) {
-                BranchManager.checkout_commit(selectedRadioButton.get_item());
+                BranchManager.checkoutCommit(selectedRadioButton.getItem());
             }
         });
 
@@ -403,7 +403,7 @@ public class FXController {
         warningStage.setScene(warningScene);
         warningStage.show();
     }
-    @FXML private void branch_window_button() {
+    @FXML private void branchWindowButton() {
         Stage branchStage = new Stage();
         branchStage.setTitle("Branches of this project");
 
@@ -411,8 +411,8 @@ public class FXController {
 
         ToggleGroup toggleGroup = new ToggleGroup();
 
-        BranchManager.load_branch(BranchManager.load_which_branch_is_the_current());
-        List<Branch> allBranches = BranchManager.get_all_available_branches();
+        BranchManager.loadBranch(BranchManager.loadWhichBranchIsTheCurrent());
+        List<Branch> allBranches = BranchManager.getAllAvailableBranches();
 
         Button checkoutBranchButton = new Button("Checkout this branch");
         Button createBranchButton = new Button("New branch");
@@ -431,28 +431,28 @@ public class FXController {
             @SuppressWarnings("unchecked")
             CustomRadioButton<Branch> selectedRadioButton = (CustomRadioButton<Branch>) toggleGroup.getSelectedToggle();
             if (selectedRadioButton != null) {
-                Branch branch = selectedRadioButton.get_item();
-                BranchManager.load_branch(branch.getName());
+                Branch branch = selectedRadioButton.getItem();
+                BranchManager.loadBranch(branch.getName());
                 currentBranch.setText("Branch : " + branch.getName());
                 branchStage.close();
             }
         });
 
         createBranchButton.setOnAction(e ->
-            handle_create_branch_window()
+            handleCreateBranchWindow()
         );
 
         deleteBranchButton.setOnAction(e -> {
             @SuppressWarnings("unchecked")
             CustomRadioButton<Branch> selectedRadioButton = (CustomRadioButton<Branch>) toggleGroup.getSelectedToggle();
-            String nameBranch = selectedRadioButton.get_item().getName();
+            String nameBranch = selectedRadioButton.getItem().getName();
             if(BranchManager.getCurrentBranch().getName().equals(nameBranch)){
-                warning_window("Cant delete current branch");
+                warningWindow("Cant delete current branch");
                 return;
             }
             BranchManager.delete_branch(nameBranch);
             branchStage.close();
-            branch_window_button();
+            branchWindowButton();
         });
 
         HBox hbox = new HBox();
@@ -466,7 +466,7 @@ public class FXController {
         branchStage.setScene(warningScene);
         branchStage.show();
     }
-    private void handle_create_branch_window(){
+    private void handleCreateBranchWindow(){
         Stage addBranchStage = new Stage();
         addBranchStage.setTitle("ADD BRANCH WINDOW");
 
@@ -479,14 +479,14 @@ public class FXController {
         Button button = new Button("Add");
         button.setOnAction(e-> {
             String userInput = textArea.getText();
-            if(BranchManager.branch_exist(userInput)){
-                warning_window("Branch already exists");
+            if(BranchManager.branchExist(userInput)){
+                warningWindow("Branch already exists");
                 return;
             }
-            BranchManager.add_or_save_branch(userInput);
-            BranchManager.load_branch(userInput);
+            BranchManager.addOrSaveBranch(userInput);
+            BranchManager.loadBranch(userInput);
 
-            recheck_the_state();
+            recheckTheState();
             addBranchStage.close();
         });
 
@@ -499,7 +499,7 @@ public class FXController {
         addBranchStage.setScene(addBranchScene);
         addBranchStage.show();
     }
-    private void warning_window(String text){
+    private void warningWindow(String text){
         Stage w = new Stage();
         w.setTitle("WARNING WINDOW");
 
@@ -516,9 +516,9 @@ public class FXController {
     }
 
     private TextFlow changesLinesTextFlow;
-    @FXML private void compare_two_files(){
-        compare_files();
-        show_line_changes();
+    @FXML private void compareTwoFiles(){
+        compareFiles();
+        showLineChanges();
         Stage resultStage = new Stage();
         resultStage.setTitle("Result Window");
         StackPane resultLayout = new StackPane();
@@ -527,18 +527,18 @@ public class FXController {
         resultStage.setScene(resultScene);
         resultStage.show();
     }
-    private void compare_files() {
+    private void compareFiles() {
         File f = new File(directoryPath + "/720_576.ps1");
         File f2 = new File(directoryPath + "/720_576_1.ps1");
 
-        ComparatorManager.set_old_file_path(f.getPath());
-        ComparatorManager.set_new_file_path(f2.getPath());
+        ComparatorManager.setOldFilePath(f.getPath());
+        ComparatorManager.setNewFilePath(f2.getPath());
 
-        ComparatorManager.to_map_files();
+        ComparatorManager.toMapFiles();
 
         ComparatorManager.compare();
     }
-    private void show_line_changes() {
+    private void showLineChanges() {
 
         changesLinesTextFlow = new TextFlow();
         ArrayList<LineChanges> lineChangesList = ComparatorManager.get_current_changes_lines();

@@ -7,51 +7,54 @@ import java.util.*;
 
 public class FileManager {
 
-    private static final Map<String, HashedFile> allFilesPresent = new HashMap<>();
+    private static final Map<String, HashedFile> ALL_PRESENT_FILES_OF_CURRENT_DIRECTORY_IN_HASHED_FORM = new HashMap<>();
 
-    public static Map<String, HashedFile> get_all_present_files() {
-        return allFilesPresent;
+    public static Map<String, HashedFile> getAllPresentFilesOfCurrentDirectoryInHashedForm() {
+        return ALL_PRESENT_FILES_OF_CURRENT_DIRECTORY_IN_HASHED_FORM;
     }
-    public static void clear_current_state_of_project() {
-        allFilesPresent.clear();
+    public static void clearCurrentStateOfProject() {
+        ALL_PRESENT_FILES_OF_CURRENT_DIRECTORY_IN_HASHED_FORM.clear();
     }
 
-    public static void get_into_current_files(String filePath) {
+    public static void detectAllPresentFilesInThisDirectory(String current) {
+        File currentDirectory = new File(current);
 
-        HashedFile sf = new HashedFile(filePath);
-        sf.sha1_the_file();
-        allFilesPresent.put(filePath, sf);
-    }
-    public static void get_all_present_files_in_directory(String current) {
-        File currentProjectDirectory = new File(current);
-
-        if (!currentProjectDirectory.exists() || !currentProjectDirectory.isDirectory()) {
+        if (!currentDirectory.exists() || !currentDirectory.isDirectory()) {
             return;
         }
 
-        File[] files = currentProjectDirectory.listFiles();
-        if (files == null) return;
+        File[] filesOfCurrentDirectory = currentDirectory.listFiles();
+        if (filesOfCurrentDirectory == null) return;
 
-        Set<String> filesToIgnore = load_ignore_file();
+        Set<String> filesToIgnore = loadAllFilesThatHasToBeIgnored();
 
-        for (File file : files) {
+        hashAndStoreValidFiles(filesOfCurrentDirectory, filesToIgnore);
+
+    }
+    private static void hashAndStoreValidFiles(File[] filesOfCurrentDirectory, Set<String> filesToIgnore) {
+        for (File file : filesOfCurrentDirectory) {
             String filePath = file.getPath();
-            if (check_if_file_is_ignored(filesToIgnore, file.getName())) {
+            if (checkIfFileHasToBeIgnored(filesToIgnore, file.getName())) {
                 continue;
             }
 
             if (file.isDirectory()) {
-                get_all_present_files_in_directory(filePath);
-            } else
-                get_into_current_files(filePath);
+                detectAllPresentFilesInThisDirectory(filePath);
+            } else {
+                putIntoAllPresentFilesHashMap(filePath);
+            }
         }
-
+    }
+    public static void putIntoAllPresentFilesHashMap(String filePath) {
+        HashedFile sf = new HashedFile(filePath);
+        sf.sha1TheFile();
+        ALL_PRESENT_FILES_OF_CURRENT_DIRECTORY_IN_HASHED_FORM.put(filePath, sf);
     }
 
-    public static boolean check_if_file_is_ignored(Set<String> filesToIgnore, String filePathName) {
+    public static boolean checkIfFileHasToBeIgnored(Set<String> filesToIgnore, String filePathName) {
         return filesToIgnore.contains(filePathName);
     }
-    public static Set<String> load_ignore_file() {
+    public static Set<String> loadAllFilesThatHasToBeIgnored() {
         Set<String> filesToIgnore = new HashSet<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(RepositoryManager.PathOfIgnoreFile))) {
@@ -62,6 +65,7 @@ public class FileManager {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         return filesToIgnore;
     }
 

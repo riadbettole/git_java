@@ -13,10 +13,10 @@ import java.util.Set;
 public class BranchManager {
     static HashMap<String, HashedFile> stagingData;
     static private Branch currentBranch;
-    static final private String FirstBranch = "Master";
-    static final private String NameOfCurrentBranchFile = "currentBranch";
+    static final private String FIRST_BRANCH = "Master";
+    static final private String NAME_OF_CURRENT_BRANCH_FILE = "currentBranch";
 
-    static public ArrayList<Branch> get_all_available_branches(){
+    static public ArrayList<Branch> getAllAvailableBranches(){
         ArrayList<Branch> allBranches = new ArrayList<>();
         File f = new File(RepositoryManager.PathOfBranchFolder);
         File[] files = f.listFiles();
@@ -26,65 +26,65 @@ public class BranchManager {
 
         for(File subfile : files){
             String name = subfile.getName();
-            if(!name.equals(NameOfCurrentBranchFile))
-                allBranches.add(LoadingSavingManager.load_item(RepositoryManager.PathOfBranchFolder + "/" + name));
+            if(!name.equals(NAME_OF_CURRENT_BRANCH_FILE))
+                allBranches.add(LoadingSavingManager.loadItem(RepositoryManager.PathOfBranchFolder + "/" + name));
         }
 
         return allBranches;
     }
 
-    static public void save_which_branch_is_the_current(String Name){
-        LoadingSavingManager.saveData(RepositoryManager.PathOfBranchFolder + "/" + NameOfCurrentBranchFile, Name);
+    static public void saveWhichBranchIsTheCurrent(String Name){
+        LoadingSavingManager.saveData(RepositoryManager.PathOfBranchFolder + "/" + NAME_OF_CURRENT_BRANCH_FILE, Name);
     }
-    static public String load_which_branch_is_the_current(){
-        return LoadingSavingManager.load_item(RepositoryManager.PathOfBranchFolder + "/" + NameOfCurrentBranchFile);
-    }
-
-    public static void set_and_load_current_branch(){
-        if(!branch_exist(FirstBranch))
-            save_which_branch_is_the_current(FirstBranch);
-        load_branch(load_which_branch_is_the_current());
+    static public String loadWhichBranchIsTheCurrent(){
+        return LoadingSavingManager.loadItem(RepositoryManager.PathOfBranchFolder + "/" + NAME_OF_CURRENT_BRANCH_FILE);
     }
 
-    static public void load_branch(String name){
-        save_which_branch_is_the_current(name);
-        if(branch_exist(name)){
-            currentBranch = LoadingSavingManager.load_item(RepositoryManager.PathOfBranchFolder + "/" + name);
+    public static void setAndLoadCurrentBranch(){
+        if(!branchExist(FIRST_BRANCH))
+            saveWhichBranchIsTheCurrent(FIRST_BRANCH);
+        loadBranch(loadWhichBranchIsTheCurrent());
+    }
+
+    static public void loadBranch(String name){
+        saveWhichBranchIsTheCurrent(name);
+        if(branchExist(name)){
+            currentBranch = LoadingSavingManager.loadItem(RepositoryManager.PathOfBranchFolder + "/" + name);
         }else{
-            currentBranch = new Branch(FirstBranch);
-            add_or_save_branch(FirstBranch);
+            currentBranch = new Branch(FIRST_BRANCH);
+            addOrSaveBranch(FIRST_BRANCH);
         }
     }
 
-    static public void checkout_commit(Commit commit){
-        load_files_of_commit_X_to_place(commit);
+    static public void checkoutCommit(Commit commit){
+        loadFilesOfCommitXToPlace(commit);
     }
 
-    public static void load_files_of_commit_X_to_place(Commit commitToPlace){
-        String pathOfZippedStaging = commitToPlace.get_zipped_commited_stagingPath();
-        stagingData = LoadingSavingManager.load_item(RepositoryManager.PathOfStagingFile);
+    public static void loadFilesOfCommitXToPlace(Commit commitToPlace){
+        String pathOfZippedStaging = commitToPlace.getZippedCommitedStagingPath();
+        stagingData = LoadingSavingManager.loadItem(RepositoryManager.PathOfStagingAreaFile);
 
-        File f = new File(RepositoryManager.PathOfStagingFile);
+        File f = new File(RepositoryManager.PathOfStagingAreaFile);
         if(!f.delete()) return;
 
         File currentDirectory = new File(RepositoryManager.PathOfRepository);
-        delete_all_files(currentDirectory.getParentFile());
+        deleteAllFiles(currentDirectory.getParentFile());
 
-        CompressionManager.uncompress_file_content_into_its_place(pathOfZippedStaging, RepositoryManager.PathOfStagingFile);
-        stagingData = LoadingSavingManager.load_item(RepositoryManager.PathOfStagingFile);
-        stagingData.forEach((path,hashedFile)-> CompressionManager.uncompress_file_content_into_its_place(hashedFile.get_zip_path(), hashedFile.get_file_path()) );
+        CompressionManager.uncompressFileContentIntoItsPlace(pathOfZippedStaging, RepositoryManager.PathOfStagingAreaFile);
+        stagingData = LoadingSavingManager.loadItem(RepositoryManager.PathOfStagingAreaFile);
+        stagingData.forEach((path,hashedFile)-> CompressionManager.uncompressFileContentIntoItsPlace(hashedFile.get_zip_path(), hashedFile.get_file_path()) );
     }
 
-    private static void delete_all_files(File current_directory) {
+    private static void deleteAllFiles(File current_directory) {
         File [] files = current_directory.listFiles();
         assert files != null;
-        Set<String> filesToIgnore = FileManager.load_ignore_file();
+        Set<String> filesToIgnore = FileManager.loadAllFilesThatHasToBeIgnored();
         for (File subfile : files) {
-            if(!stagingData.containsKey(subfile.getPath()) | FileManager.check_if_file_is_ignored(filesToIgnore, subfile.getName()))
+            if(!stagingData.containsKey(subfile.getPath()) | FileManager.checkIfFileHasToBeIgnored(filesToIgnore, subfile.getName()))
                 continue;
 
             if (subfile.isDirectory()) {
-                delete_all_files(subfile);
+                deleteAllFiles(subfile);
             }
 
             if(!subfile.delete())
@@ -92,24 +92,24 @@ public class BranchManager {
         }
     }
 
-    public static void add_new_commit(String message) {
-        HashedFile hashedStagingFile = new HashedFile(RepositoryManager.PathOfStagingFile);
+    public static void addNewCommit(String message) {
+        HashedFile hashedStagingFile = new HashedFile(RepositoryManager.PathOfStagingAreaFile);
 
         String zipPath = hashedStagingFile.get_zip_path();
         String wholePathForFile = hashedStagingFile.get_file_path();
-        CompressionManager.compress_file_content_into_zipped_folder(wholePathForFile, zipPath);
+        CompressionManager.compressFileContentIntoZippedFolder(wholePathForFile, zipPath);
 
         Commit newCommit = new Commit(message, "ryad", hashedStagingFile.get_zip_path());
         LinkedList<Commit> allCommits = currentBranch.getAllCommits();
         allCommits.add(newCommit);
 
-        StagingManager.update_staged_files_to_commited();
+        StagingManager.updateStagedFilesToCommitted();
 
-        add_or_save_branch(currentBranch.getName());
-        save_which_branch_is_the_current(currentBranch.getName());
+        addOrSaveBranch(currentBranch.getName());
+        saveWhichBranchIsTheCurrent(currentBranch.getName());
     }
 
-    static public boolean branch_exist(String name){
+    static public boolean branchExist(String name){
         File file = new File(RepositoryManager.PathOfBranchFolder + "/" + name);
         return file.exists();
     }
@@ -118,7 +118,7 @@ public class BranchManager {
         return currentBranch;
     }
 
-    static public void add_or_save_branch(String nameOfBranch){
+    static public void addOrSaveBranch(String nameOfBranch){
         Branch branch = currentBranch;
         branch.setName(nameOfBranch);
         LoadingSavingManager.saveData(RepositoryManager.PathOfBranchFolder + "/"+ nameOfBranch , branch);

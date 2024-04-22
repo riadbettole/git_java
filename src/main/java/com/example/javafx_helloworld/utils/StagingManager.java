@@ -9,99 +9,109 @@ import java.util.*;
 
 public class StagingManager {
 
-    public static boolean staging_doesnt_exist() {
-        String filePath = RepositoryManager.PathOfStagingFile;
+    public static boolean stagingAreaFileDoesNotExist() {
+        String filePath = RepositoryManager.PathOfStagingAreaFile;
 
         File file = new File(filePath);
 
         return !file.exists();
     }
 
-    public static void add_file_to_staging_data(HashedFile addedFile){
-        HashMap<String, HashedFile> stagingData;
+    /**Compress and save file to staging Area*/
+    public static void addFileToStagingArea(HashedFile addedFileToStagingArea){
+        HashMap<String, HashedFile> stagingArea;
 
-        if(StagingManager.staging_doesnt_exist()) {
-            stagingData = new HashMap<>();
+        if(StagingManager.stagingAreaFileDoesNotExist()) {
+            stagingArea = new HashMap<>();
         }else {
-            stagingData = LoadingSavingManager.load_item(RepositoryManager.PathOfStagingFile);
+            stagingArea = LoadingSavingManager.loadItem(RepositoryManager.PathOfStagingAreaFile);
         }
 
-        String zipPath = addedFile.get_zip_path();
-        String wholePathForFile = addedFile.get_file_path();
-        CompressionManager.compress_file_content_into_zipped_folder(wholePathForFile, zipPath);
+        String zipPath = addedFileToStagingArea.get_zip_path();
+        String wholePathForFile = addedFileToStagingArea.get_file_path();
+        CompressionManager.compressFileContentIntoZippedFolder(wholePathForFile, zipPath);
 
-        addedFile.setState(FileStateEnums.ADDED);
-        stagingData.put(wholePathForFile,addedFile);
+        addedFileToStagingArea.setState(FileStateEnums.ADDED);
+        stagingArea.put(wholePathForFile,addedFileToStagingArea);
 
-        LoadingSavingManager.saveData(RepositoryManager.PathOfStagingFile, stagingData);
+        LoadingSavingManager.saveData(RepositoryManager.PathOfStagingAreaFile, stagingArea);
+    }
+    public static void removeFromStagingArea(HashedFile fileToRemoveFromStagingArea){
+        HashMap<String, HashedFile> stagingArea = LoadingSavingManager.loadItem(RepositoryManager.PathOfStagingAreaFile);
+
+        String filePathOfAddedFileToStagingArea = fileToRemoveFromStagingArea.get_file_path();
+
+        stagingArea.remove(filePathOfAddedFileToStagingArea);
+
+        LoadingSavingManager.saveData(RepositoryManager.PathOfStagingAreaFile, stagingArea);
+    }
+    public static void restoreFileFromStagingData(HashedFile fileToRestoreFromStagingArea) {
+        String zipPath = fileToRestoreFromStagingArea.get_zip_path();
+        String wholePathForFileToBeRestored = fileToRestoreFromStagingArea.get_file_path();
+
+        CompressionManager.uncompressFileContentIntoItsPlace(zipPath, wholePathForFileToBeRestored);
     }
 
-    public static void delete_file_from_staging_data(HashedFile file){
-        HashMap<String, HashedFile> stagingData = LoadingSavingManager.load_item(RepositoryManager.PathOfStagingFile);
-        String filepath = file.get_file_path();
-        stagingData.remove(filepath);
+    public static HashMap<FileStateEnums, ArrayList<HashedFile>> detectChangesInStagingData(){
+        Map<String, HashedFile> allPresentFilesInDirectory = FileManager.getAllPresentFilesOfCurrentDirectoryInHashedForm();
+        Map<String, HashedFile> stagingArea;
 
-        LoadingSavingManager.saveData(RepositoryManager.PathOfStagingFile, stagingData);
+        if(StagingManager.stagingAreaFileDoesNotExist()) {
+            stagingArea = new HashMap<>();
+        }else {
+            stagingArea = LoadingSavingManager.loadItem(RepositoryManager.PathOfStagingAreaFile);
+        }
+
+        HashMap<FileStateEnums, ArrayList<HashedFile>> allChangesInStagedArea = new HashMap<>();
+
+        stagingArea.forEach((stagedFilePath, hashedAddedFile)->{
+            boolean doesTheFileStillExist = allPresentFilesInDirectory.containsKey(stagedFilePath);
+
+            FileStateEnums state = defineStateOfCurrentFile(hashedAddedFile, doesTheFileStillExist, allChangesInStagedArea, allPresentFilesInDirectory);
+            if (state == null) {
+                return;
+            }
+
+            hashedAddedFile.setState(state);
+            allChangesInStagedArea.computeIfAbsent(state, k -> new ArrayList<>()).add(hashedAddedFile);
+
+            allPresentFilesInDirectory.remove(stagedFilePath); //gets removed to not get detected in the next iteration
+        });
+
+        //rest of the files that hasn't been removed go to unstaged area
+        allPresentFilesInDirectory.forEach((filePath, hashedFile) -> {
+            allChangesInStagedArea.computeIfAbsent(FileStateEnums.UNADDED, k -> new ArrayList<>()).add(hashedFile);
+            hashedFile.setState(FileStateEnums.UNADDED);
+        });
+
+        return allChangesInStagedArea;
     }
-    public static void restore_file_from_staging_data(HashedFile file) {
-        String zipPath = file.get_zip_path();
-        String wholePathForFile = file.get_file_path();
+    private static FileStateEnums defineStateOfCurrentFile(HashedFile hashedAddedFile, boolean fileExist, HashMap<FileStateEnums, ArrayList<HashedFile>> allChangesInStagedArea, Map<String, HashedFile> allPresentFilesInDirectory) {
+        FileStateEnums state ;
 
-        CompressionManager.uncompress_file_content_into_its_place(zipPath, wholePathForFile);
+        if(!fileExist){
+            hashedAddedFile.setState(FileStateEnums.DELETED);
+            allChangesInStagedArea.computeIfAbsent(FileStateEnums.DELETED, k -> new ArrayList<>()).add(hashedAddedFile);
+            return null;
+        }
+        //only three logical choices if the file is not deleted
+        if(fileIsModified(hashedAddedFile, allPresentFilesInDirectory))
+            state = FileStateEnums.MODIFIED;
+        else if(!hashedAddedFile.isCommited()) //file is not commited then its added
+            state = FileStateEnums.ADDED;
+        else
+            state = FileStateEnums.COMITED;
+
+        return state;
     }
-
-    private static boolean file_is_modified(HashedFile hashedFile, Map<String, HashedFile> allPresentFiles) {
+    private static boolean fileIsModified(HashedFile hashedFile, Map<String, HashedFile> allPresentFiles) {
         String filePath = hashedFile.get_file_path();
         return !hashedFile.get_hashed_name()
                 .equals( allPresentFiles.get(filePath).get_hashed_name() );
     }
 
-    public static HashMap<FileStateEnums, ArrayList<HashedFile>> detect_changes_in_staging_data(){
-        Map<String, HashedFile> allPresentFiles = FileManager.get_all_present_files();
-        Map<String, HashedFile> stagingData;
-
-        if(StagingManager.staging_doesnt_exist()) {
-            stagingData = new HashMap<>();
-        }else {
-            stagingData = LoadingSavingManager.load_item(RepositoryManager.PathOfStagingFile);
-        }
-
-        HashMap<FileStateEnums, ArrayList<HashedFile>> changes = new HashMap<>();
-
-        stagingData.forEach((filePath, hashedFile)->{
-            boolean fileExist = allPresentFiles.containsKey(filePath);
-
-            if(!fileExist){
-                hashedFile.setState(FileStateEnums.DELETED);
-                changes.computeIfAbsent(FileStateEnums.DELETED, k -> new ArrayList<>()).add(hashedFile);
-                return;
-            }
-
-            FileStateEnums state ;
-
-            if(file_is_modified(hashedFile, allPresentFiles))
-                state = FileStateEnums.MODIFIED;
-            else if(!hashedFile.isCommited())
-                state = FileStateEnums.ADDED;
-            else
-                state = FileStateEnums.COMITED;
-
-            hashedFile.setState(state);
-            changes.computeIfAbsent(state, k -> new ArrayList<>()).add(hashedFile);
-
-            allPresentFiles.remove(filePath);
-        });
-
-        allPresentFiles.forEach((filePath, hashedFile) -> {
-            changes.computeIfAbsent(FileStateEnums.UNADDED, k -> new ArrayList<>()).add(hashedFile);
-            hashedFile.setState(FileStateEnums.UNADDED);
-        });
-
-        return changes;
-    }
-
-    public static void update_staged_files_to_commited(){
-        HashMap<String,HashedFile> stagingData = LoadingSavingManager.load_item(RepositoryManager.PathOfStagingFile);
+    public static void updateStagedFilesToCommitted(){
+        HashMap<String,HashedFile> stagingData = LoadingSavingManager.loadItem(RepositoryManager.PathOfStagingAreaFile);
 
         stagingData.forEach((pathStagedFile, stagedFile)->{
             if(stagingData.get(pathStagedFile).get_state() == FileStateEnums.ADDED){
@@ -109,7 +119,7 @@ public class StagingManager {
             }
         });
 
-        LoadingSavingManager.saveData(RepositoryManager.PathOfStagingFile, stagingData);
+        LoadingSavingManager.saveData(RepositoryManager.PathOfStagingAreaFile, stagingData);
     }
 }
 

@@ -21,11 +21,11 @@ public class HashedFile implements Serializable {
     public HashedFile(String filePath) {
         this.filePath = filePath;
         this.commited = false;
-        sha1_the_file();
+        sha1TheFile();
         setup_file_parent_and_zip_path();
     }
 
-    public void sha1_the_file() {
+    public void sha1TheFile() {
         try {
             byte[] fileBytes = Files.readAllBytes(Path.of(filePath));
 

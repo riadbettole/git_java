@@ -4,7 +4,7 @@ import java.io.*;
 
 public class LoadingSavingManager {
     @SuppressWarnings("unchecked")
-    static public <T> T load_item(String Path){
+    static public <T> T loadItem(String Path){
         try(ObjectInputStream e = new ObjectInputStream(new FileInputStream(Path))){
             return (T) e.readObject();
         }catch (ClassNotFoundException | IOException e) {

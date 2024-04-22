@@ -20,7 +20,7 @@ public class GitMain extends Application {
         stage.show();
 
         FXController controller = fxmlLoader.getController();
-        controller.show_recent_projects();
+        controller.showRecentProjects();
     }
 
     public static void main(String[] args) {

@@ -20,7 +20,7 @@ public class Commit implements Serializable {
         return message;
     }
 
-    public String get_zipped_commited_stagingPath() {
+    public String getZippedCommitedStagingPath() {
         return hashedZippedCommitedStagingPath;
     }
 }

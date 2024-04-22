@@ -6,7 +6,7 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 public class CompressionManager {
-    public static void compress_file_content_into_zipped_folder(String inputFileName, String outputFileName){
+    public static void compressFileContentIntoZippedFolder(String inputFileName, String outputFileName){
         create_file_directories_if_not_present(outputFileName);
 
         try (FileInputStream in = new FileInputStream(inputFileName);
@@ -26,8 +26,7 @@ public class CompressionManager {
             throw new RuntimeException(e);
         }
     }
-    public static void uncompress_file_content_into_its_place(String fileToUnzip, String whereToUnzip){
-
+    public static void uncompressFileContentIntoItsPlace(String fileToUnzip, String whereToUnzip){
         create_file_directories_if_not_present(whereToUnzip);
 
         try (FileInputStream in = new FileInputStream(fileToUnzip);
