@@ -13,13 +13,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 public class BranchManager {
@@ -124,7 +118,7 @@ public class BranchManager {
     public static void pushBranch(){
         List<Commit> allCommits = currentBranch.getAllCommits();
         Commit commitToPlace = allCommits.getLast();
-//        System.out.println(commit.getMessage());
+        System.out.println(commitToPlace.getMessage());
 
         String pathOfZippedStaging = commitToPlace.getZippedCommitedStagingPath();
         stagingData = LoadingSavingManager.loadItem(RepositoryManager.PathOfStagingAreaFile);
@@ -132,10 +126,10 @@ public class BranchManager {
 //        CompressionManager.uncompressFileContentIntoItsPlace(pathOfZippedStaging, RepositoryManager.PathOfStagingAreaFile);
 //        stagingData = LoadingSavingManager.loadItem(RepositoryManager.PathOfStagingAreaFile);
 //        stagingData.forEach((path,hashedFile)-> CompressionManager.uncompressFileContentIntoItsPlace(hashedFile.get_zip_path(), hashedFile.get_file_path()) );
-        stagingData.forEach((path,hashedFile)-> x(hashedFile.get_zip_path(), hashedFile.get_file_path(),hashedFile.isCommited()));
+        stagingData.forEach((path,hashedFile)-> pushFiles(hashedFile.get_zip_path(), hashedFile.get_file_path(),hashedFile.isCommited()));
     }
 
-    private static void x(String zipPath, String path, boolean isCommited){
+    private static void pushFiles(String zipPath, String path, boolean isCommited){
         if(!isCommited){
             return;
         }
