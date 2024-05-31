@@ -19,6 +19,8 @@ public class RepositoryManager {
     public static String PathOfStagingAreaFile;
     public static String PathOfBranchFolder ;
 
+    public static String RemoteUrlRepository ;
+    public static String KeyRepository ;
 
     public static void setDirectoryPath(String _directoryPath) {
         directoryPath = _directoryPath;
@@ -184,4 +186,8 @@ public class RepositoryManager {
         }
     }
 
+    public static void setKeyAndUrl(String url, String key) {
+        RemoteUrlRepository = url;
+        KeyRepository = key;
+    }
 }

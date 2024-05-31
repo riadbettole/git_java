@@ -38,6 +38,10 @@ public class FXController {
     @FXML private VBox recentProjectsContainer;
     @FXML private HBox executeButtonContainer;
 
+    @FXML private Button pushButton;
+    @FXML private Button pullButton;
+    @FXML private Button connectButton;
+
     CustomStack<String> recentProjects;
 
     ArrayList<CustomCheckBox<HashedFile>> customHashedFilesCheckBoxes;
@@ -54,10 +58,16 @@ public class FXController {
         openFolderButton  .setVisible(true);
         checkoutButton    .setVisible(true);
         branchWindowButton.setVisible(true);
+        connectButton     .setVisible(true);
     }
     @FXML private void openProject() {
         RepositoryManager.selectFolderOfRepository();
         directoryPath = RepositoryManager.getDirectoryPath();
+
+        pushButton.setVisible(false);
+        pullButton.setVisible(false);
+        RepositoryManager.RemoteUrlRepository = "";
+        RepositoryManager.KeyRepository = "";
 
         BranchManager.setAndLoadCurrentBranch();
         textNameProject.setText("RECENT PROJECTS : current is " + directoryPath);
@@ -80,6 +90,11 @@ public class FXController {
         }
         directoryPath = _directoryPath;
         textNameProject.setText("RECENT PROJECTS : current is " + directoryPath);
+
+        pushButton.setVisible(false);
+        pullButton.setVisible(false);
+        RepositoryManager.RemoteUrlRepository = "";
+        RepositoryManager.KeyRepository = "";
 
         RepositoryManager.setDirectoryPath(directoryPath);
         RepositoryManager.initializeRepositoryFoldersAndFiles();
@@ -560,5 +575,49 @@ public class FXController {
                 });
     }
 
+    @FXML private void pushThisBranch(){
+        BranchManager.pushBranch();
+    }
+    @FXML private void pullAllbranches(){
+//        BranchManager.pull();
+    }
+    @FXML private void connectToRepo(){
+        Stage connectStage = new Stage();
+        connectStage.setTitle("CONNECT WINDOW");
+
+        VBox vbox = new VBox();
+        vbox.setAlignment(Pos.CENTER);
+
+        Text text = new Text("REMOTE URL OF REPOSITORY");
+        TextField textField = new TextField();
+
+        Text text2 = new Text("KEY OF REPOSITORY");
+        TextField textField2 = new TextField();
+
+        Button button = new Button("Connect");
+        button.setOnAction(e->
+        {
+            String userInput = textField.getText();
+            String userInput2 = textField2.getText();
+
+            RepositoryManager.setKeyAndUrl(userInput, userInput2);
+
+            pushButton.setVisible(true);
+            pullButton.setVisible(true);
+
+            connectStage.close();
+        });
+
+        vbox.getChildren().add(text);
+        vbox.getChildren().add(textField);
+        vbox.getChildren().add(text2);
+        vbox.getChildren().add(textField2);
+        vbox.getChildren().add(button);
+
+        Scene warningScene = new Scene(vbox,300,200);
+
+        connectStage.setScene(warningScene);
+        connectStage.show();
+    }
 }
 

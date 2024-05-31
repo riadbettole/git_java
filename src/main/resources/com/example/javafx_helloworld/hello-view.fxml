@@ -16,6 +16,7 @@
         <Button onAction="#openProject" text="Open Project" />
         <Button fx:id="recheckFilesButton" onAction="#recheckTheState" text="Check Changes" visible="false"/>
         <Button fx:id="openFolderButton" onAction="#openFolder" text="Open current folder" visible="false"/>
+        <Button fx:id="connectButton" text="GITREPO" onAction="#connectToRepo" visible="false"/>
     </HBox>
     <Text  fx:id="textNameProject" text="RECENT PROJECTS"/>
     <Text  fx:id="currentBranch" text=" "/>
@@ -37,7 +38,9 @@
         <Button fx:id="deleteRepoButton" text="Delete this repo" onAction="#deleteThisRepo" visible="false"/>
     </HBox>
 
-
-
+    <HBox spacing="10.0">
+        <Button fx:id="pushButton" text="Push" onAction="#pushThisBranch" visible="false"/>
+        <Button fx:id="pullButton" text="Pull" onAction="#pullAllbranches" visible="false" />
+    </HBox>
 
 </VBox>

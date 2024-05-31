@@ -1,6 +1,9 @@
 module com.example.javafx_helloworld {
     requires javafx.controls;
     requires javafx.fxml;
+    requires org.apache.httpcomponents.httpclient;
+    requires org.apache.httpcomponents.httpmime;
+    requires org.apache.httpcomponents.httpcore;
 
 
     opens com.example.javafx_helloworld to javafx.fxml;
